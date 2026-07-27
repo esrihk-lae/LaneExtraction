@@ -1,4 +1,7 @@
-This is a custom internal-use version of the Lane-Level Street Map Extraction work. 
+This is a custom internal-use version of the Lane-Level Street Map Extraction project. 
+Not intended for external use. 
+
+
 
 
 # Lane-Level Street Map Extraction from Aerial Imagery
@@ -47,14 +50,14 @@ Train the turning lane validation model.
 
 ```bash
 cd code/turningLaneValidation
-python train.py
+python3 train.py
 ```
 
 Train the turning lane extraction model.
 
 ```bash
 cd code/turningLaneExtraction
-python train.py
+python3 train.py
 ```
 
 ## Inference and Evaluation
