@@ -212,7 +212,7 @@ class Dataloader():
 		self.getBatchInternal(self.maxbatchsize)
 
 	def getBatchInternal(self, batchsize):
-		#print("getting batch")
+		print(f"getting batch")
 
 		img = np.zeros((self.image_size, self.image_size), dtype=np.uint8)
 		connector1 = np.zeros((self.image_size, self.image_size), dtype=np.uint8)
@@ -230,7 +230,8 @@ class Dataloader():
 				# sample two connected points
 				coin = random.randint(0,1)
 
-				#print(i, tile_id, coin)
+				#2026-07 dky sanity check
+				# print(f"i:{i}, tile_id: {tile_id}, coin: {coin}")
 				if coin == 0:
 					locallink = random.choice(locallinks)
 					vertices = locallink
@@ -355,7 +356,12 @@ class Dataloader():
 
 
 				else:
-					nid1 = random.choice(nodes.keys())
+					nodes_key_list = list(nodes.keys())
+					#print(f"nodes: {type(nodes.keys())}, nodes_list: {nodes_key_list}")
+
+					# 2026-07 dky - nodes.keys() is not subscriptable:
+					# nid1 = random.choice(nodes.keys())
+					nid1 = random.choice(nodes_key_list)
 					candidate = []
 					pos1 = nodes[nid1]
 					for nid2, pos2 in nodes.items():
@@ -406,7 +412,8 @@ class Dataloader():
 					x2 = pos2[0] - sc 
 					y2 = pos2[1] - sr
 
-					#print(x1,y1,x2,y2)
+					# 2026-07 dky not sure why there were bad values here ...
+					# print(f"x1:{x1}, y1:{y1}, x2:{x2}, y2:{y2}")
 
 					cv2.circle(connector1, (x1,y1), 12, (255), -1)
 					cv2.circle(connector2, (x2,y2), 12, (255), -1)

@@ -1,6 +1,7 @@
 tf210/
 tf216/
 tf_latest/
+# *.jpg
 __pycache__/
 *.pyc
 *.pyo

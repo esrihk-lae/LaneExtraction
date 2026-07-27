@@ -143,9 +143,45 @@ class Train(TrainingFramework):
 
 
 if __name__ == "__main__":
+
+	os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # Specify the GPU device to use (e.g., GPU 0)
+	os.environ['TF_ALLOW_IOLIBS'] = '0' # Disable TensorFlow I/O libraries to avoid OOM issues
+	#os.environ['TF_CUDNN_USE_AUTOTUNE'] = '0'  # Disable cuDNN autotune to avoid OOM issues
+	
+	#from tensorflow.python.client import device_lib
+
+	# tf GPU configuration - see infer.py
+	# Log exactly which device (CPU or GPU) each operation is assigned to
+	#config = tf.ConfigProto(log_device_placement=True)
+
+	# Initialize RunOptions and turn on the OOM allocation report
+	# run_options = tf.compat.v1.RunOptions()
+	# run_options.report_tensor_allocations_upon_oom = True
+
+	# Initialize RunMetadata to collect the execution metrics
+	# run_metadata = tf.compat.v1.RunMetadata()
+
+	# Memory Management
+	#config.gpu_options.allow_growth = False
+	#config.gpu_options.per_process_gpu_memory_fraction = 0.5
+
+
+	# Print the name of the primary GPU device if available
+	#print(f"Is GPU available:  {tf.test.is_gpu_available()}")
+	#print(f"Primary GPU Device Name: {tf.test.gpu_device_name()}")
+
+
+	#gpus = tf.config.list_physical_devices('GPU')
+	# Replace list_physical_devices with the legacy v1 equivalent:
+	#gpus = tf.config.experimental.list_devices()
+	#gpus = device_lib.list_local_devices()
+	#print(device_lib.list_local_devices())
+	#print(tf.config.experimental.list_physical_devices('GPU'))
+
 	#trainer = Train(sys.argv[1])
 	trainer = Train()
-	
+
+	#print(f"{dir(trainer)}")
 	epochsisze = trainer.epochsize
 
 	config = {}

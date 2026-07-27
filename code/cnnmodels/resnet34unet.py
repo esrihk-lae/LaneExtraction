@@ -1,6 +1,10 @@
 import numpy as np
 import tensorflow as tf
+#import tensorflow.compat.v1 as tf
+#tf.disable_v2_behavior()
+
 import tflearn
+
 from tensorflow.contrib.layers.python.layers import batch_norm
 import random
 import pickle 
@@ -9,6 +13,8 @@ import scipy
 import math
 from PIL import Image
 import sys 
+sys.path.append("/app/code/cnnmodels")  # dky - temp / add path for other modules
+
 import os 
 from resnet import resblock as residual_block
 from resnet import relu

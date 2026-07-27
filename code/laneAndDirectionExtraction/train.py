@@ -5,6 +5,7 @@ import os
 import sys 
 sys.path.append(os.path.dirname(os.path.dirname(sys.path[0])))
 
+
 from framework.training import TrainingFramework
 
 from PIL import Image 
@@ -120,6 +121,11 @@ class Train(TrainingFramework):
 
 
 if __name__ == "__main__":
+	print("\n")
+	for path in sys.path:
+		print(f"debug: path={path}")
+	print("\n")
+
 	trainer = Train()
 	epochsisze = trainer.epochsize
 
