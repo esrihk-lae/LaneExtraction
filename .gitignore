@@ -1,0 +1,7 @@
+tf210/
+tf216/
+tf_latest/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
