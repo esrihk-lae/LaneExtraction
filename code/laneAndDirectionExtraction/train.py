@@ -74,7 +74,7 @@ class Train(TrainingFramework):
 	# placeholder methods
 	def getLoss(self, result):
 		if math.isnan(result[0]):
-			print("loss is nan ...")
+			print(f"loss is nan ({result[0]})...")
 			exit()
 
 		return result[0]
@@ -83,7 +83,7 @@ class Train(TrainingFramework):
 		return step / float(self.epochsize)
 
 	def saveModel(self, step):
-		if step % (self.epochsize * 10) == 0:
+		if step > 0 and step % (self.epochsize * 5) == 0:	# dky skip step 0
 			self.model.saveModel(self.modelfolder + "/model%d" % (step // (self.epochsize)))
 		return False
 
