@@ -1,7 +1,18 @@
 tf210/
 tf216/
 tf_latest/
-# *.jpg
+input*.jpg
+lane_*.jpg
+mask*.jpg
+normal_*.jpg
+output*.jpg
+output_direction*.jpg
+regionmask_*.jpg
+sdmap*.jpg
+sat_*.jpg
+targe_direction*.jpg
+target*.jpg
+link_*.json
 __pycache__/
 *.pyc
 *.pyo
