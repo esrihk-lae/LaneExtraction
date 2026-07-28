@@ -83,7 +83,7 @@ class Train(TrainingFramework):
 		return step / float(self.epochsize)
 
 	def saveModel(self, step):
-		if step > 0 and step % (self.epochsize * 5) == 0:	# dky skip step 0
+		if step > 0 and step % (self.epochsize * 5) == 0:	# dky skip step 0, save after 5 epochs
 			self.model.saveModel(self.modelfolder + "/model%d" % (step // (self.epochsize)))
 		return False
 
