@@ -23,7 +23,7 @@ class Train(TrainingFramework):
 	def __init__(self, mode = "seg"):
 		self.mode = mode
 		self.image_size = 640
-		self.batch_size = 8
+		self.batch_size = 2		# dky - original: 8
 		self.datafolder = "../dataset_training"
 		self.training_range = []
 		dataset_split = json.load(open("../split_all.json"))
@@ -32,14 +32,14 @@ class Train(TrainingFramework):
 			for i in range(9):
 				self.training_range.append("_%d" % (tid*9+i))
 	
-		self.instance = "_turningLaneValidation_run1_640_resnet34_500ep"+self.mode
+		self.instance = "_turningLaneValidation_run1_640_resnet34_500ep" + self.mode
 		
 		#self.instance = "link_run6_640_resnet34v3" # gt direction
 		self.modelfolder = "model" + self.instance
 		self.validationfolder = "validation" + self.instance
 		
-		Popen("mkdir " + self.modelfolder, shell=True).wait()
-		Popen("mkdir " + self.validationfolder, shell=True).wait()
+		Popen("mkdir -p " + self.modelfolder, shell=True).wait()
+		Popen("mkdir -p " + self.validationfolder, shell=True).wait()
 		
 		self.counter = 0
 		self.disloss = 0
@@ -54,7 +54,7 @@ class Train(TrainingFramework):
 		return self.dataloader
 
 	def createModel(self, sess):
-		self.model = LinkModel(sess, self.image_size, batchsize=self.batch_size)
+		self.model = LinkModel(sess, self.image_size, batchsize = self.batch_size)
 		
 		return self.model
 
@@ -68,7 +68,7 @@ class Train(TrainingFramework):
 
 		return ret
 
-
+	## dky: preload() 
 	def preload(self, dataloader, step):
 		if step > 0 and step % 50 == 0:
 			dataloader.preload()
@@ -90,7 +90,7 @@ class Train(TrainingFramework):
 		return step / float(self.epochsize)
 
 	def saveModel(self, step):
-		if step % (self.epochsize * 5) == 0:
+		if step > 0 and step % (self.epochsize * 5) == 0:
 			self.model.saveModel(self.modelfolder + "/model%d" % step)
 		return False
 
@@ -135,7 +135,7 @@ class Train(TrainingFramework):
 				
 				direction_img = np.clip(direction_img, 0, 255)
 
-				Image.fromarray(direction_img.astype(np.uint8) ).save(self.validationfolder + "/direction%d.jpg" % (ind+i))
+				Image.fromarray(direction_img.astype(np.uint8)).save(self.validationfolder + "/direction%d.jpg" % (ind+i))
 				
 
 
@@ -145,7 +145,7 @@ class Train(TrainingFramework):
 if __name__ == "__main__":
 
 	os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # Specify the GPU device to use (e.g., GPU 0)
-	os.environ['TF_ALLOW_IOLIBS'] = '0' # Disable TensorFlow I/O libraries to avoid OOM issues
+	#os.environ['TF_ALLOW_IOLIBS'] = '0' # Disable TensorFlow I/O libraries to avoid OOM issues
 	#os.environ['TF_CUDNN_USE_AUTOTUNE'] = '0'  # Disable cuDNN autotune to avoid OOM issues
 	
 	#from tensorflow.python.client import device_lib
@@ -187,7 +187,7 @@ if __name__ == "__main__":
 	config = {}
 	config["learningrate"] = 0.0001
 	config["lr_decay"] = [0.1,0.1]
-	config["lr_decay_step"] = [epochsisze * 350,epochsisze * 450]
+	config["lr_decay_step"] = [epochsisze * 350, epochsisze * 450]
 	
 	config["step_init"] = 0
 	config["step_max"] = epochsisze * 500 + 1

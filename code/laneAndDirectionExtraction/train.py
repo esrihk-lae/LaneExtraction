@@ -121,11 +121,6 @@ class Train(TrainingFramework):
 
 
 if __name__ == "__main__":
-	print("\n")
-	for path in sys.path:
-		print(f"debug: path={path}")
-	print("\n")
-
 	trainer = Train()
 	epochsisze = trainer.epochsize
 

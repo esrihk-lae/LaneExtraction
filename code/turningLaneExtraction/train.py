@@ -19,7 +19,7 @@ class Train(TrainingFramework):
 	def __init__(self, mode = "seg"):
 		self.mode = mode
 		self.image_size = 640
-		self.batch_size = 8
+		self.batch_size = 2		# dky - original: 8
 		self.datafolder = "../dataset_training"
 		self.training_range = []
 		dataset_split = json.load(open("../split_all.json"))
@@ -28,13 +28,13 @@ class Train(TrainingFramework):
 			for i in range(9):
 				self.training_range.append("_%d" % (tid*9+i))
 	
-		self.instance = "_turningLaneExtraction_640_resnet34_poscodev3_v0"+self.mode
+		self.instance = "_turningLaneExtraction_640_resnet34_poscodev3_v0" + self.mode
 		
 		self.modelfolder = "model" + self.instance
 		self.validationfolder = "validation" + self.instance
 		
-		Popen("mkdir " + self.modelfolder, shell=True).wait()
-		Popen("mkdir " + self.validationfolder, shell=True).wait()
+		Popen("mkdir -p " + self.modelfolder, shell=True).wait()
+		Popen("mkdir -p " + self.validationfolder, shell=True).wait()
 		
 		self.counter = 0
 		self.disloss = 0
@@ -83,7 +83,7 @@ class Train(TrainingFramework):
 		return step / float(self.epochsize)
 
 	def saveModel(self, step):
-		if step % (self.epochsize * 5) == 0:
+		if step > 0 and step % (self.epochsize * 5) == 0:
 			self.model.saveModel(self.modelfolder + "/model%d" % step)
 		return False
 
