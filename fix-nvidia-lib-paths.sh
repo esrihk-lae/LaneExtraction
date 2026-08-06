@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 # dky
 # 2026-07
 #
@@ -8,7 +8,7 @@
 
 unset LD_LIBRARY_PATH
 
-export LD_LIBRARY_PATH=$(find /home/dky/src/LaneExtraction -name "*.so*" | grep nvidia | xargs dirname | sort -u | paste -d ":" -s -)
+#export LD_LIBRARY_PATH=$(find /home/dky/src/LaneExtraction -name "*.so*" | grep nvidia | xargs dirname | sort -u | paste -d ":" -s -)
 #export LD_LIBRARY_PATH=$(find /usr/local/cuda -name "*.so*" | grep nvidia | xargs dirname | sort -u | paste -d ":" -s -)
 #export LD_LIBRARY_PATH=$(find /usr/local -name "*.so*" | xargs dirname | sort -u | paste -d ":" -s -)
 
