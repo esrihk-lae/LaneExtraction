@@ -83,13 +83,17 @@ class TrainingFramework():
 							addlog(k, v[0] / float(v[1]), step)
 							self.kv[k] = [0,0]
 
-					sys.stdout.write("\rstep %d epoch:%.2f "% (step, progress) + ">" * p + "-" * (51-p) + " loss %f time %f %f %f %f " % (loss, t_preload, t_load, t_train, t_other - t_preload - t_load - t_train) + s )
-					sys.stdout.flush()	
+					# dky: replaced with modern python below
+					#sys.stdout.write("\rstep %d epoch:%.2f "% (step, progress) + ">" * p + "-" * (51-p) + " loss %f time %f %f %f %f " % (loss, t_preload, t_load, t_train, t_other - t_preload - t_load - t_train) + s )
+					#sys.stdout.flush()	
+
+					bar = ">" * p + "-" * (51 - p)
+					t_rem = t_other - t_preload - t_load - t_train
+					print(f"\rstep {step} epoch:{progress:.2f} {bar} loss {loss:.6f} time {t_preload:.6f} {t_load:.6f} {t_train:.6f} {t_rem:.6f} {s}", end="",flush=True)
 
 					p = int((progress - int(progress)) * 100000)
 					if int(progress) != int(lastprogress):
-						print("time per epoch", t_other)
-						print("eta", t_other * (maxstep - step) / max(1, (step - last_step)) / 3600.0 )
+						print(f"time per epoch: {t_other}, eta: {t_other * (maxstep - step) / max(1, (step - last_step)) / 3600.0}")
 						last_step = step
 						t_load = 0
 						t_preload = 0
