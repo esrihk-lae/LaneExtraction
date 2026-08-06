@@ -121,7 +121,9 @@ for region in regions:
 			
 			
 			counter += 1
-			
-print(total_length, total_length / 8 / 1000.0)
 
+
+#print(total_length, total_length / 8 / 1000.0)
+# Round the calculated value to 2 decimal places
+print(f"{total_length} {total_length / 8 / 1000.0:.2f}")
 

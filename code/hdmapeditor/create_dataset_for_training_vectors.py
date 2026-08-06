@@ -117,7 +117,7 @@ for region in regions:
 				
 
 				
-			print("number of links", len(links))
+			print(f"number of links: {len(links)}")
 			#exit()
 			polygons = masklabel.findAllPolygons()
 			# render masks, lanes, and normals (directions)
