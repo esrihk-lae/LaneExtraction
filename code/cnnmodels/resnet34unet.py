@@ -12,10 +12,13 @@ import scipy.ndimage as nd
 import scipy 
 import math
 from PIL import Image
-import sys 
-sys.path.append("/app/code/cnnmodels")  # dky - temp / add path for other modules
-
 import os 
+
+import sys
+#sys.path.append("/app/code/cnnmodels")  # dky - temp / add path for other modules
+#sys.path.append("~/src/LaneExtraction/code/cnnmodels")
+sys.path.append(os.path.dirname(os.getcwd()))
+
 from resnet import resblock as residual_block
 from resnet import relu
 from resnet import batch_norm as batch_norm_resnet  
@@ -27,7 +30,7 @@ import tensorflow.contrib as tf_contrib
 
 def resnet34unet(x, is_training, ch_in = 3, ch_out = 2, ch = 64):
 	x, _, _ = common.create_conv_layer('enc_1', x, ch_in, ch, kx = 7, ky = 7, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm = False)
-	x1 = x 
+	x1 = x
 	features = resnet_template(x, is_training = is_training, res_n = 34, ch = ch)
 	features = [features[i] for i in range(len(features))]
 	enc_dim = [ch, ch*2, ch*4, ch*8]
@@ -41,7 +44,7 @@ def resnet34unet(x, is_training, ch_in = 3, ch_out = 2, ch = 64):
 		x, _, _ = common.create_conv_layer(name+"_2", x, in_ch1 + in_ch2, in_ch1 + in_ch2, kx = 3, ky = 3, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm = batchnorm)
 		x, _, _ = common.create_conv_layer(name+"_3", x, in_ch1 + in_ch2, out_ch, kx = 3, ky = 3, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm = batchnorm, activation = activation)
 
-		return x 
+		return x
 	
 	x = aggregate_block(features[2], features[3], enc_dim[2], enc_dim[3], enc_dim[2], "agg1", batchnorm=True)
 	x = aggregate_block(features[1], x, enc_dim[1], enc_dim[2], enc_dim[1], "agg2", batchnorm=True)
@@ -51,7 +54,7 @@ def resnet34unet(x, is_training, ch_in = 3, ch_out = 2, ch = 64):
 	x, _, _ = common.create_conv_layer('output', x, ch, ch_out, kx = 7, ky = 7, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm = False, deconv=True, activation = "linear")
 	
 
-	return x 
+	return x
 
 weight_init = tf_contrib.layers.variance_scaling_initializer()
 weight_regularizer = tf_contrib.layers.l2_regularizer(0.0001)
@@ -80,7 +83,7 @@ def resnet34unet_v3(x, is_training, ch_in = 3, ch_out = 2, ch = 64, feature_out 
 		x, _, _ = common.create_conv_layer(name+"_2", x, in_ch1 + in_ch2, in_ch1 + in_ch2, kx = 3, ky = 3, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm = batchnorm)
 		x, _, _ = common.create_conv_layer(name+"_3", x, in_ch1 + in_ch2, out_ch, kx = 3, ky = 3, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm = batchnorm, activation = activation)
 
-		return x 
+		return x
 
 	# wider receptive field 
 	features[3], _, _ = common.create_conv_layer('mid_1', features[3], enc_dim[3], enc_dim[3], kx = 3, ky = 3, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm=True, dilation=2)
@@ -104,7 +107,7 @@ def resnet34unet_v3(x, is_training, ch_in = 3, ch_out = 2, ch = 64, feature_out 
 	def prediction_conv(x, ch_in, ch_out, name):
 		x, _, _ = common.create_conv_layer(name+"_1", x, ch_in, ch_out, kx = 3, ky = 3, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm = False, activation = "linear")
 		#x, _, _ = common.create_conv_layer(name+"_2", x, ch_in, ch_out, kx = 5, ky = 5, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm = False, activation = "linear")
-		return x 
+		return x
 
 	x = aggregate_block(features[2], features[3], enc_dim[2], enc_dim[3], enc_dim[2], "agg1", batchnorm=True)
 	#p16 = prediction_conv(x, enc_dim[2], ch_out, "pred16")
@@ -226,7 +229,7 @@ def unet_dilated(x, is_training, ch_in = 3, ch_out = 2, ch = 64, feature_out = F
 		x, _, _ = common.create_conv_layer(name+"_2", x, in_ch1 + in_ch2, in_ch1 + in_ch2, kx = 3, ky = 3, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm = batchnorm)
 		x, _, _ = common.create_conv_layer(name+"_3", x, in_ch1 + in_ch2, out_ch, kx = 3, ky = 3, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm = batchnorm, activation = activation)
 
-		return x 
+		return x
 
 	if global_feature_func is not None:
 		features[3] = global_feature_func(features[3])
@@ -281,7 +284,7 @@ def resnet34FPN(x, is_training, input_dim, ch_in = 3, ch_out = 2, ch = 64, FPN_c
 		x, _, _ = common.create_conv_layer(name+"_2", x, in_ch2, in_ch2, kx = 3, ky = 3, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm = batchnorm)
 		x, _, _ = common.create_conv_layer(name+"_3", x, in_ch2, out_ch, kx = 3, ky = 3, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm = batchnorm, activation = activation)
 
-		return x 
+		return x
 
 	
 
@@ -326,7 +329,7 @@ def resnet34FPN(x, is_training, input_dim, ch_in = 3, ch_out = 2, ch = 64, FPN_c
 
 
 
-def get_residual_layer(res_n) :
+def get_residual_layer(res_n):
 	x = []
 
 	if res_n == 18 :
@@ -351,9 +354,9 @@ def resnet_template(x, is_training=True, reuse=False, res_n = 18, ch = 64, featu
 	with tf.variable_scope("resnet", reuse=reuse):
 		
 		residual_block = resblock
-		if res_n < 50 :
+		if res_n < 50:
 			residual_block = resblock
-		else :
+		else:
 			residual_block = bottle_resblock
 
 		residual_list = get_residual_layer(res_n)
