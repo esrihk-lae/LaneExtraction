@@ -1,3 +1,4 @@
+dataset/sat*.p
 tf210/
 tf216/
 tf_latest/
