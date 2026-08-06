@@ -1,20 +1,31 @@
-dataset/sat*.p
+
+__pycache__/
+*$py.class
+*.py[codiz]
+
+# C extensions
+*.so
+
+
+# local: venv
+tf115/
+tf115*/
 tf210/
 tf216/
 tf_latest/
-input*.jpg
-lane_*.jpg
-mask*.jpg
-normal_*.jpg
-output*.jpg
-output_direction*.jpg
-regionmask_*.jpg
-sdmap*.jpg
-sat_*.jpg
-targe_direction*.jpg
-target*.jpg
+
+# local
+checkpoint
+model*.index
+model*.meta
+model*.data*
+dataset/*.p
+dataset/*.jpg
+code/*/*.jpg
+code/*/*/*.jpg
 link_*.json
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+
+
+# misc
+*.swp
+*.ttf
