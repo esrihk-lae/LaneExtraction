@@ -9,8 +9,8 @@ import sys
 sys.path.append(os.path.dirname(sys.path[0]))
 
 #from satellite import mapbox as md
-from PIL import Image 
-import numpy as np 
+from PIL import Image
+import numpy as np
 import scipy.misc
 import json 
 import cv2

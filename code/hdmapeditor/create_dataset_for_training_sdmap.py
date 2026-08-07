@@ -8,8 +8,8 @@ import os
 import sys 
 sys.path.append(os.path.dirname(sys.path[0]))
 
-from satellite import mapbox as md
-from osm import osm 
+#from satellite import mapbox as md
+from osm import osm
 from PIL import Image 
 import numpy as np 
 import scipy.misc
@@ -49,7 +49,7 @@ for region in regions:
 			# 	break
 			# roadlabel, masklabel = labels 
 
-			OSMMap = osm.OSMLoader(subregion,noUnderground=True, includeServiceRoad=False, useblacklist = False)
+			OSMMap = osm.OSMLoader(subregion, noUnderground=True, includeServiceRoad=False, useblacklist = False)
 			# TODO draw it 
 			
 			print(len(OSMMap.nodedict))
