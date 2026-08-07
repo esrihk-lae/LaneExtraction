@@ -18,7 +18,7 @@ weight_regularizer = tf_contrib.layers.l2_regularizer(0.0001)
 ##################################################################################
 
 def conv(x, channels, kernel=4, stride=2, padding='SAME', use_bias=True, scope='conv_0'):
-    with tf.variable_scope(scope):
+    with tf.compat.v1.variable_scope(scope):
         x = tf.layers.conv2d(inputs=x, filters=channels,
                              kernel_size=kernel, kernel_initializer=weight_init,
                              kernel_regularizer=weight_regularizer,
@@ -34,7 +34,7 @@ def fully_conneted(x, units, use_bias=True, scope='fully_0'):
         return x
 
 def resblock(x_init, channels, is_training=True, use_bias=True, downsample=False, scope='resblock') :
-    with tf.variable_scope(scope) :
+    with tf.compat.v1.variable_scope(scope) :
 
         x = batch_norm(x_init, is_training, scope='batch_norm_0')
         x = relu(x)
