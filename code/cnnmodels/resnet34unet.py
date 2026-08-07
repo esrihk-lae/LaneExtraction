@@ -15,9 +15,9 @@ from PIL import Image
 import os 
 
 import sys
-#sys.path.append("/app/code/cnnmodels")  # dky - temp / add path for other modules
+sys.path.append("/app/code/cnnmodels")  # dky - temp / add path for other modules
 #sys.path.append("~/src/LaneExtraction/code/cnnmodels")
-sys.path.append(os.path.dirname(os.getcwd()))
+#sys.path.append(os.path.dirname(os.getcwd()))
 
 from resnet import resblock as residual_block
 from resnet import relu
@@ -351,7 +351,7 @@ def get_residual_layer(res_n):
 
 
 def resnet_template(x, is_training=True, reuse=False, res_n = 18, ch = 64, feature_activation = tf.nn.relu):
-	with tf.variable_scope("resnet", reuse=reuse):
+	with tf.compat.v1.variable_scope("resnet", reuse=reuse):
 		
 		residual_block = resblock
 		if res_n < 50:

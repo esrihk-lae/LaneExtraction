@@ -53,12 +53,12 @@ def create_conv_layer(name, input_tensor, in_channels, out_channels, is_training
 		input_tensor = tf.pad(input_tensor, [[0, 0], [(kx+(dilation-1)*2) //2, (kx+(dilation-1)*2)//2], [(kx+(dilation-1)*2)//2, (kx+(dilation-1)*2)//2], [0, 0]], mode="CONSTANT")
 
 
-	weights = tf.get_variable(name+'weights', shape=[kx, ky, in_channels, out_channels],
+	weights = tf.compat.v1.get_variable(name+'weights', shape=[kx, ky, in_channels, out_channels],
 			initializer=tf.truncated_normal_initializer(stddev=np.sqrt(0.02 / kx / ky / in_channels)),
 			regularizer=weight_regularizer,
 			dtype=tf.float32
 	)
-	biases = tf.get_variable(name+'biases', shape=[out_channels], initializer=tf.constant_initializer(0.0),regularizer=weight_regularizer, dtype=tf.float32)
+	biases = tf.compat.v1.get_variable(name+'biases', shape=[out_channels], initializer=tf.constant_initializer(0.0),regularizer=weight_regularizer, dtype=tf.float32)
 
 	
 	if deconv == False:
