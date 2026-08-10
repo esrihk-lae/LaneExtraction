@@ -15,9 +15,16 @@ from PIL import Image
 import os 
 
 import sys
-sys.path.append("/app/code/cnnmodels")  # dky - temp / add path for other modules
+cur_dir = os.path.dirname(os.getcwd())
+new_paths = [cur_dir, '/app/LaneExtraction/code/cnnmodels', '../cnnmodels']
+
+#sys.path.append("/app/LaneExtraction/code/cnnmodels")  # dky - temp / add path for other modules
 #sys.path.append("~/src/LaneExtraction/code/cnnmodels")
 #sys.path.append(os.path.dirname(os.getcwd()))
+
+for path in new_paths:
+	if path not in sys.path:
+		sys.path.append(path)
 
 from resnet import resblock as residual_block
 from resnet import relu

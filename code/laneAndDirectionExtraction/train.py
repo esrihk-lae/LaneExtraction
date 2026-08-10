@@ -4,7 +4,7 @@ from model import LaneModel
 import os 
 import sys 
 sys.path.append(os.path.dirname(os.path.dirname(sys.path[0])))
-
+sys.path.append("../cnnmodels")
 
 from framework.training import TrainingFramework
 
@@ -36,8 +36,8 @@ class Train(TrainingFramework):
 		self.modelfolder = "model" + self.instance
 		self.validationfolder = "validation" + self.instance
 		
-		Popen("mkdir " + self.modelfolder, shell=True).wait()
-		Popen("mkdir " + self.validationfolder, shell=True).wait()
+		Popen("mkdir -p " + self.modelfolder, shell=True).wait()
+		Popen("mkdir -p " + self.validationfolder, shell=True).wait()
 		
 		self.counter = 0
 		self.disloss = 0
@@ -79,12 +79,34 @@ class Train(TrainingFramework):
 
 		return result[0]
 
+
 	def getProgress(self, step):
 		return step / float(self.epochsize)
 
+
 	def saveModel(self, step):
-		if step > 0 and step % (self.epochsize * 5) == 0:	# dky skip step 0, save after 5 epochs
-			self.model.saveModel(self.modelfolder + "/model%d" % (step // (self.epochsize)))
+		save_every_epochs = 5
+		save_every_steps = 500
+
+		epoch = step // self.epochsize
+		is_epoch_end = (epoch > 0) and (step % self.epochsize == 0)
+		is_interval_epoch = (epoch > 0) and (epoch % save_every_epochs == 0)
+
+		#print(f" >>> epoch={epoch}, is_epoch_end={is_epoch_end}, is_interval_epoch={is_interval_epoch}")
+
+		#if step > 0:	# dky: just save it
+		#if step % (self.epochsize * 10) == 0:	# dky: original from author
+		#if step > 0 and is epoch_end and (is_interval_epoch or ):
+		#if step > 0 and (step % save_every_steps ==0 or is_epoch_end):     # save at stepcount 
+		
+		if step > 0 and (step % save_every_steps ==0 or is_epoch_end):
+			print(f" >>> in saveModel(): step={step}, epochsize={self.epochsize}, step//epochsize={step // self.epochsize} (saving) ***")
+			#self.model.saveModel(self.modelfolder + "/model%d" % (step // (self.epochsize)))	# dky: old school, not f-strings
+			self.model.saveModel(f"{self.modelfolder}/model{step // self.epochsize}")
+		# else: 
+		# 	# dky: to confirm the save bug
+		# 	print(f" >>> in saveModel(): step={step}, epochsize={self.epochsize}, step//epochsize={step // self.epochsize} mod=({step % (self.epochsize * 10)}) (not saving)")
+
 		return False
 
 	def visualization(self, step, result = None, batch = None):

@@ -1,6 +1,7 @@
 #import rdp
 # Code Copied From Favyen
 
+import imageio.v2 as imageio
 import scipy.ndimage
 from scipy.ndimage.filters import gaussian_filter
 import skimage.morphology
@@ -66,7 +67,9 @@ in_fname = sys.argv[1]
 threshold = int(sys.argv[2])
 out_fname = sys.argv[3]
 
-im = scipy.ndimage.imread(in_fname)
+#im = scipy.ndimage.imread(in_fname)  # dky: replace scipy.ndimage.imread with imageio.imread
+im = imageio.imread(in_fname, mode='RGB')	# dky: imageio replacement for scipy.ndmimage.imread; set mode to RGB
+
 if len(im.shape) == 3:
 	im = im[:, :, 0]
 im = numpy.swapaxes(im, 0, 1)
@@ -230,7 +233,7 @@ g = graph_refine(neighbors, isolated_thr = 32, spurs_thr=0)
 g = connectDeadEnds(g, thr = 16)
 g = simpilfyGraph(g, e=5)
 # g = graphDensifyPixel(g, 50)
-pickle.dump(g, open(out_fname, "w"))
+pickle.dump(g, open(out_fname, "wb"))	# dky: change write to binary write
 
 dim = np.shape(im)
 img = np.zeros((dim[0], dim[1]), dtype= np.uint8)

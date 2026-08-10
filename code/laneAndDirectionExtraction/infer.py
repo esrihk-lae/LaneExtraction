@@ -20,17 +20,16 @@ cnninput = 640		#orig
 
 
 margin = (cnninput - windowsize1) // 2
-
 margin2 = (cnninput - windowsize2) // 2
 
 Popen("mkdir -p " + outputfolder, shell=True).wait()
 
-#img = scipy.ndimage.imread(inputfile)		# dky: testing update to use imageio
-img = imageio.imread(inputfile)
+#img = scipy.ndimage.imread(inputfile)		# dky: orig
+img = imageio.imread(inputfile, mode='RGB')		# dky: change to imageio, read as RGB?
 
 #sdmap = scipy.ndimage.imread(inputfile.replace("sat", "sdmap"))
-sdmap = imageio.imread(inputfile.replace("sat", "sdmap"))
-
+sdmap = imageio.imread(inputfile.replace("sat", "sdmap"), mode='L')		# dky: change to imageio; sdmap test read as mode L
+# dky TODO: need to figure out what sdmap is to align read mode -- what color mode is this?
 
 #img = (img.astype(np.float) / 255.0 - 0.5) * 0.81 		# dky: test update for np.float -> float
 img = (img.astype(float) / 255.0 - 0.5) * 0.81 
@@ -39,8 +38,10 @@ img = (img.astype(float) / 255.0 - 0.5) * 0.81
 sdmap = sdmap.astype(float) / 255.0
 dim = np.shape(img)
 
-img = np.pad(img, ((margin, margin),(margin, margin),(0,0)), 'constant')
-sdmap = np.pad(sdmap, ((margin, margin),(margin, margin)), 'constant')
+# np.pad(array, pad_width, mode='constant', **kwargs)
+#print(f">>> img={img}, \nmargin={margin}, margin2={margin2}, windowsize1={windowsize1}, windowsize2={windowsize2}, cnninput={cnninput}")
+img = np.pad(img, ((margin, margin), (margin, margin), (0,0)), 'constant')
+sdmap = np.pad(sdmap, ((margin, margin), (margin, margin)), 'constant') # dky ????
 
 mask = np.zeros((cnninput,cnninput,3)) 
 for i in range((windowsize2 - windowsize1) // 2 ):
@@ -80,11 +81,11 @@ with tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_option
 		# sliding window inference
 		for i in range(dim[0] // windowsize1):
 			for j in range(dim[1] // windowsize1):
-				print(f">>> i={i}, j={j}")
+				#print(f">>> i={i}, j={j}")
 				r = i * windowsize1
 				c = j * windowsize1
 
-				print(f">>> row r={r}, col c={c}")
+				#print(f">>> row r={r}, col c={c}")
 				x_in[0,:,:,:] = img[r:r+cnninput, c:c+cnninput,:] 
 				#x_in2[0,:,:,0] = sdmap[r:r+cnninput, c:c+cnninput] 	# dky ??? lol what???
 
@@ -97,7 +98,7 @@ with tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_option
 	output = np.divide(output, weights)
 
 	output = output[margin:-margin, margin:-margin,:]
-	Image.fromarray(((output[:,:,0]) * 255).astype(np.uint8) ).save(outputfolder + "/seg.png")
+	Image.fromarray(((output[:,:,0]) * 255).astype(np.uint8)).save(outputfolder + "/seg.png")
 
 	direction_img = np.zeros(dim, dtype=np.uint8)
 
@@ -105,7 +106,7 @@ with tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_option
 	direction_img[:,:,1] = np.clip(output[:,:,2],-1,1) * 127 + 127
 	direction_img[:,:,0] = 127
 	
-	Image.fromarray(direction_img.astype(np.uint8) ).save(outputfolder + "/direction.png")
+	Image.fromarray(direction_img.astype(np.uint8)).save(outputfolder + "/direction.png")
 	
 
 

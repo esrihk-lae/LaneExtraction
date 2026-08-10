@@ -44,19 +44,19 @@ class Dataloader():
 
 		for i in range(self.preload_tiles if ind is None else 1):
 			ind = random.choice(self.indrange) if ind is None else ind 
-			#sat_img = scipy.ndimage.imread(self.folder+"/sat%s.jpg" % ind)
-			sat_img = imageio.v2.imread(self.folder+"/sat%s.jpg" % ind)   # dky 2026-07 scipy.ndimage.imread deprecated
+			sat_img = scipy.ndimage.imread(self.folder+"/sat%s.jpg" % ind)
+			#sat_img = imageio.v2.imread(self.folder+"/sat%s.jpg" % ind)   # dky 2026-07 scipy.ndimage.imread deprecated
 
-			#mask = scipy.ndimage.imread(self.folder+"/regionmask%s.jpg" % ind)
-			mask = imageio.v2.imread(self.folder+"/regionmask%s.jpg" % ind)
+			mask = scipy.ndimage.imread(self.folder+"/regionmask%s.jpg" % ind)
+			#mask = imageio.v2.imread(self.folder+"/regionmask%s.jpg" % ind)
 
-			#target = scipy.ndimage.imread(self.folder+"/lane%s.jpg" % ind)
-			target = imageio.v2.imread(self.folder+"/lane%s.jpg" % ind)
+			target = scipy.ndimage.imread(self.folder+"/lane%s.jpg" % ind)
+			#target = imageio.v2.imread(self.folder+"/lane%s.jpg" % ind)
 
 			#target_t = scipy.ndimage.imread(self.folder+"/terminal%s.jpg" % ind)
 
-			#normal = scipy.ndimage.imread(self.folder+"/normal%s.jpg" % ind)
-			normal = imageio.v2.imread(self.folder+"/normal%s.jpg" % ind)
+			normal = scipy.ndimage.imread(self.folder+"/normal%s.jpg" % ind)
+			#normal = imageio.v2.imread(self.folder+"/normal%s.jpg" % ind)
 
 			#sdmap = scipy.ndimage.imread(self.folder+"/sdmap%s.jpg" % ind)
 
