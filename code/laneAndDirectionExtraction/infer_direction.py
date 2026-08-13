@@ -1,19 +1,16 @@
 # Derek Yuen
 # 2026-08
 
-
-import os 
-import sys 
+import math
+import os
+import sys
 sys.path.append(os.path.dirname(sys.path[0]))
-
-import sys 
 
 import imageio.v2 as imageio
 from PIL import Image
-import numpy as np 
-from subprocess import Popen 
-import tensorflow as tf 
-import math
+import numpy as np
+#from subprocess import Popen       # dky: unused import
+#import tensorflow as tf            # dky: unused import
 #import scipy.ndimage
 import pickle
 import cv2
@@ -22,13 +19,11 @@ import json
 #inputdirection = scipy.ndimage.imread(sys.argv[1])
 inputdirection = imageio.imread(sys.argv[1], mode='RGB')    # dky: change to imageio, read as RGB
 
-
 inputgraph = pickle.load(open(sys.argv[2], "rb"), encoding="bytes")    # dky: change read to binary read
-print(f">>>inputgraph: type:{type(inputgraph)}")
-print(f"dir={dir(inputgraph)},\ninputgraph={inputgraph}")
+#print(f">>>inputgraph: type:{type(inputgraph)}")
+#print(f"dir={dir(inputgraph)},\ninputgraph={inputgraph}")
 
 outputfolder = sys.argv[3]
-
 
 ways = []
 visited = set()
@@ -58,7 +53,7 @@ for nid, nei in inputgraph.items():
             else:
                 #print(f">>> nei={nei}: way={way}, k1={k1}, k2={k2}")    # dky: debug
                 ways.append(way)
-            
+
             visited.add(k1)
             visited.add(k2)
 
@@ -79,9 +74,9 @@ for way in ways:
             r = int(r1 * a + r2 * (1-a))
             c = int(c1 * a + c2 * (1-a))
 
-            vr += (inputdirection[r,c,1] - 127) / 127.0 
-            vc += (inputdirection[r,c,2] - 127) / 127.0 
-            
+            vr += (inputdirection[r,c,1] - 127) / 127.0
+            vc += (inputdirection[r,c,2] - 127) / 127.0
+
         l = math.sqrt((vr)**2 + (vc)**2)
         vr /= l
         vc /= l
@@ -111,15 +106,14 @@ for way in ways:
 		dx /= l
 		dy /= l
 
-		color = (int(127 + 127*dx),int(127 + 127*dy),127)
+		color = (int(127 + 127*dx), int(127 + 127*dy), 127)
 		cv2.line(directions, (int(x1),int(y1)), (int(x2),int(y2)), color, 5)
 
+# write direction image
+direction_png = os.path.join(outputfolder, "direction_sharp.png")
+status = cv2.imwrite(direction_png, directions)
 
-cv2.imwrite(outputfolder + "/direction_sharp.png", directions)
+print(f">>> inference direction png: {direction_png}")
 
 
-            
-            
 
-        
-         

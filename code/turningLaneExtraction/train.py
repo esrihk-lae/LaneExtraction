@@ -1,25 +1,27 @@
-from dataloader import Dataloader, ParallelDataLoader
-from model import LinkModel
 
-import os 
-import sys 
-sys.path.append(os.path.dirname(os.path.dirname(sys.path[0])))
-
-from framework.training import TrainingFramework
-
-from PIL import Image 
-import numpy as np 
-from subprocess import Popen 
-import tensorflow as tf 
 import math
 import json
+import os
+import sys
+sys.path.append(os.path.dirname(sys.path[0]))
+
+
+from PIL import Image  	# pyright: ignore[reportMissingImports]
+import numpy as np		# pyright: ignore[reportMissingImports]
+#from subprocess import Popen
+#import tensorflow as tf
+
+from framework.training import TrainingFramework
+#from dataloader import Dataloader, ParallelDataLoader
+from dataloader import ParallelDataLoader
+from model import LinkModel
 
 
 class Train(TrainingFramework):
 	def __init__(self, mode = "seg"):
 		self.mode = mode
 		self.image_size = 640
-		self.batch_size = 2		# dky - original: 8
+		self.batch_size = 4		# dky - original: 8
 		self.datafolder = "../dataset_training"
 		self.training_range = []
 		dataset_split = json.load(open("../split_all.json"))
@@ -32,10 +34,14 @@ class Train(TrainingFramework):
 		
 		self.modelfolder = "model" + self.instance
 		self.validationfolder = "validation" + self.instance
+
 		
-		Popen("mkdir -p " + self.modelfolder, shell=True).wait()
-		Popen("mkdir -p " + self.validationfolder, shell=True).wait()
-		
+		#Popen("mkdir -p " + self.modelfolder, shell=True).wait()	# dky: orig
+		os.makedirs(self.modelfolder, exist_ok=True)
+
+		#Popen("mkdir -p " + self.validationfolder, shell=True).wait()	# dky: orig
+		os.makedirs(self.validationfolder, exist_ok=True)
+
 		self.counter = 0
 		self.disloss = 0
 
@@ -60,7 +66,7 @@ class Train(TrainingFramework):
 		self.counter += 1 
 
 		
-		ret = self.model.train(batch[0], batch[1], batch[2],batch[3],batch[4], lr)
+		ret = self.model.train(batch[0], batch[1], batch[2], batch[3], batch[4], lr)
 	
 
 		return ret
@@ -87,23 +93,22 @@ class Train(TrainingFramework):
 			self.model.saveModel(self.modelfolder + "/model%d" % step)
 		return False
 
-	def visualization(self, step, result = None, batch = None):
+	def visualization(self, step, result=None, batch=None):
 		direction_img = np.zeros((self.image_size, self.image_size, 3))
 		
 		if step % 100 == 0:
 			ind = ((step // 100) * self.batch_size) % 128
 			for i in range(self.batch_size):
-				Image.fromarray(((batch[0][i,:,:,:] + 0.5) * 255).astype(np.uint8) ).save(self.validationfolder + "/input%d.jpg" % (ind+i))
-				Image.fromarray(((batch[1][i,:,:,0:3]) * 127 + 127).astype(np.uint8) ).save(self.validationfolder + "/connector1%d.jpg" % (ind+i))
-				Image.fromarray(((batch[1][i,:,:,3:6]) * 127 + 127).astype(np.uint8) ).save(self.validationfolder + "/connector2%d.jpg" % (ind+i))
+				Image.fromarray(((batch[0][i,:,:,:] + 0.5) * 255).astype(np.uint8)).save(self.validationfolder + "/input%d.jpg" % (ind+i))
+				Image.fromarray(((batch[1][i,:,:,0:3]) * 127 + 127).astype(np.uint8)).save(self.validationfolder + "/connector1%d.jpg" % (ind+i))
+				Image.fromarray(((batch[1][i,:,:,3:6]) * 127 + 127).astype(np.uint8)).save(self.validationfolder + "/connector2%d.jpg" % (ind+i))
 				
-				Image.fromarray(((batch[2][i,:,:,0]) * 255).astype(np.uint8) ).save(self.validationfolder + "/target%d.jpg" % (ind+i))
-				Image.fromarray(((result[1][i,:,:,0]) * 255).astype(np.uint8) ).save(self.validationfolder + "/output%d.jpg" % (ind+i))
-					
+				Image.fromarray(((batch[2][i,:,:,0]) * 255).astype(np.uint8)).save(self.validationfolder + "/target%d.jpg" % (ind+i))
+				Image.fromarray(((result[1][i,:,:,0]) * 255).astype(np.uint8)).save(self.validationfolder + "/output%d.jpg" % (ind+i))
 					
 
 				def norm(x):
-					#return x 
+					#return x
 					amin = np.amin(x)
 					amin = 0
 					amax = np.amax(x)
@@ -122,7 +127,7 @@ class Train(TrainingFramework):
 				
 				direction_img = np.clip(direction_img, 0, 255)
 
-				Image.fromarray(direction_img.astype(np.uint8) ).save(self.validationfolder + "/direction%d.jpg" % (ind+i))
+				Image.fromarray(direction_img.astype(np.uint8)).save(self.validationfolder + "/direction%d.jpg" % (ind+i))
 				
 		return False
 
@@ -134,8 +139,8 @@ if __name__ == "__main__":
 
 	config = {}
 	config["learningrate"] = 0.0001
-	config["lr_decay"] = [0.1,0.1]
-	config["lr_decay_step"] = [epochsisze * 300,epochsisze * 350]
+	config["lr_decay"] = [0.1, 0.1]
+	config["lr_decay_step"] = [epochsisze * 300, epochsisze * 350]
 	config["step_init"] = 0
 	config["step_max"] = epochsisze * 400 + 1
 	config["use_validation"] = False

@@ -1,11 +1,12 @@
-from model import LinkModel
-import tensorflow as tf
-
-
 import os
 import sys
-
 sys.path.append(os.path.dirname(os.path.dirname(sys.path[0])))
+
+import tensorflow as tf
+
+from model import LinkModel
+
+
 
 class InferEngine():
     def __init__(self, modelpath="../../models/TODO", batchsize = 4):   # dky - original: batchsize = 8
