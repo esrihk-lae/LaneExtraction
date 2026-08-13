@@ -1,12 +1,13 @@
-
-import numpy as np 
-import threading
-import scipy.ndimage 
 from time import time 
 import random 
-import cv2 
 import json
 import math
+
+import numpy as np				# pyright: ignore[reportMissingImports]
+import threading
+import imageio.v2 as imageio	# dky: replacement for scipy.ndimage.imread which is deprecated
+import scipy.ndimage			# pyright: ignore[reportMissingImports]
+import cv2						# pyright: ignore[reportMissingImports]
 
 global_lock = threading.Lock()
 
@@ -68,21 +69,27 @@ class Dataloader():
 		self.pos2nid = []
 		for i in range(self.preload_tiles if ind is None else 1):
 			while True:
-				ind = random.choice(self.indrange)# if ind is None else ind 
-				links = json.load(open(self.folder+"/link%s.json" % ind))
+				ind = random.choice(self.indrange)		# if ind is None else ind 
+				links = json.load(open(self.folder + "/link%s.json" % ind))
 
 				if len(links[2]) == 0:
 					continue
 
-				
+				#sat_img = scipy.ndimage.imread(self.folder+"/sat%s.jpg" % ind)
+				sat_img = imageio.imread(self.folder + "/sat%s.jpg" % ind)
+
+				#mask = scipy.ndimage.imread(self.folder+"/regionmask%s.jpg" % ind)
+				mask = imageio.imread(self.folder + "/regionmask%s.jpg" % ind)
+
+				#target = scipy.ndimage.imread(self.folder+"/lane%s.jpg" % ind)
+				target = imageio.imread(self.folder + "/lane%s.jpg" % ind)
 
 
-				sat_img = scipy.ndimage.imread(self.folder+"/sat%s.jpg" % ind)
-				mask = scipy.ndimage.imread(self.folder+"/regionmask%s.jpg" % ind)
-				target = scipy.ndimage.imread(self.folder+"/lane%s.jpg" % ind)
 				#target_t = scipy.ndimage.imread(self.folder+"/terminal%s.jpg" % ind)
-				normal = scipy.ndimage.imread(self.folder+"/normal%s.jpg" % ind)
-				
+				#target_t = imageio.imread(self.folder+"/terminal%s.jpg" % ind)
+
+				#normal = scipy.ndimage.imread(self.folder+"/normal%s.jpg" % ind)
+				normal = imageio.imread(self.folder + "/normal%s.jpg" % ind)
 				
 				#target_t = cv2.GaussianBlur(target_t, (5,5), 1.0)
 
@@ -99,6 +106,7 @@ class Dataloader():
 				if self.testing == False and random.randint(0,5) < 4:
 					angle = random.randint(0,3) * 90 + random.randint(-30,30)
 					#angle = 10
+					print(f">>> dataloader.preload() angle: angle={angle}")
 
 					sat_img = scipy.ndimage.rotate(sat_img, angle, reshape=False)
 					mask = scipy.ndimage.rotate(mask, angle, reshape=False)
@@ -146,6 +154,9 @@ class Dataloader():
 
 				nid2links = {}
 				pos2nid = {}
+
+				# dky: py3 - may need to change this to: 
+				#for k in links[1].keys():
 				for k in links[1].keys():
 					pos = links[1][k]
 					pos2nid[(pos[0], pos[1])] = k

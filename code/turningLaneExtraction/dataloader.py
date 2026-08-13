@@ -1,12 +1,15 @@
 
-import numpy as np 
-import threading
-import scipy.ndimage 
-from time import time 
-import random 
-import cv2 
 import json
 import math
+from time import time
+
+import numpy as np
+import threading
+import imageio.v2 as imageio
+
+import scipy.ndimage
+import random
+import cv2
 
 global_lock = threading.Lock()
 
@@ -22,34 +25,34 @@ def rotate(pos, angle, size):
 
 
 class Dataloader():
-	def __init__(self, folder, indrange, image_size = 640, datasetImageSize = 2048, preload_tiles = 4, testing = False):
+	def __init__(self, folder, indrange, image_size=640, datasetImageSize=2048, preload_tiles=4, testing=False):
 		self.folder = folder
 		self.indrange = indrange
-		self.image_size = image_size 
+		self.image_size = image_size
 		self.datasetImageSize = datasetImageSize
 		self.preload_tiles = preload_tiles
-		self.images = np.zeros((preload_tiles, datasetImageSize, datasetImageSize,3))
-		self.normal = np.zeros((preload_tiles, datasetImageSize, datasetImageSize,2))
-		self.targets = np.zeros((preload_tiles, datasetImageSize, datasetImageSize,1))
-		self.targets_t = np.zeros((preload_tiles, datasetImageSize, datasetImageSize,1))
-		self.masks = np.ones((preload_tiles, datasetImageSize, datasetImageSize,1))
+		self.images = np.zeros((preload_tiles, datasetImageSize, datasetImageSize, 3))
+		self.normal = np.zeros((preload_tiles, datasetImageSize, datasetImageSize, 2))
+		self.targets = np.zeros((preload_tiles, datasetImageSize, datasetImageSize, 1))
+		self.targets_t = np.zeros((preload_tiles, datasetImageSize, datasetImageSize, 1))
+		self.masks = np.ones((preload_tiles, datasetImageSize, datasetImageSize, 1))
 		self.links = []
 		self.maxbatchsize = 128
-		self.image_batch = np.zeros((self.maxbatchsize, image_size, image_size,3))
-		self.normal_batch = np.zeros((self.maxbatchsize, image_size, image_size,2))
-		self.target_batch = np.zeros((self.maxbatchsize, image_size, image_size,1))
-		self.target_t_batch = np.zeros((self.maxbatchsize, image_size, image_size,1))
-		self.connector_batch = np.zeros((self.maxbatchsize, image_size, image_size,7))
+		self.image_batch = np.zeros((self.maxbatchsize, image_size, image_size, 3))
+		self.normal_batch = np.zeros((self.maxbatchsize, image_size, image_size, 2))
+		self.target_batch = np.zeros((self.maxbatchsize, image_size, image_size, 1))
+		self.target_t_batch = np.zeros((self.maxbatchsize, image_size, image_size, 1))
+		self.connector_batch = np.zeros((self.maxbatchsize, image_size, image_size, 7))
 		self.target_label_batch = np.zeros((self.maxbatchsize, 1))
-		self.mask_batch = np.zeros((self.maxbatchsize, image_size, image_size,1))
-		
+		self.mask_batch = np.zeros((self.maxbatchsize, image_size, image_size, 1))
+
 		self.testing = testing
 
 		self.poscode = np.zeros((image_size * 2, image_size * 2,2))
 		for i in range(image_size * 2):
 			self.poscode[i,:,0] = float(i) / image_size - 1.0
 			self.poscode[:,i,1] = float(i) / image_size - 1.0
-			
+
 
 
 	def preload(self, ind = None):
@@ -63,27 +66,32 @@ class Dataloader():
 		self.links = []
 		for i in range(self.preload_tiles if ind is None else 1):
 			while True:
-				ind = random.choice(self.indrange)# if ind is None else ind 
+				ind = random.choice(self.indrange)# if ind is None else ind
 				links = json.load(open(self.folder+"/link%s.json" % ind))
 
 				if len(links[2]) == 0:
 					continue
 
-				
+				#sat_img = scipy.ndimage.imread(self.folder+"/sat%s.jpg" % ind)  # dky: orig
+				sat_img = imageio.imread(self.folder+"/sat%s.jpg" % ind)		# dky: updated for imageio
 
+				#mask = scipy.ndimage.imread(self.folder+"/regionmask%s.jpg" % ind)
+				mask = imageio.imread(self.folder+"/regionmask%s.jpg" % ind)
 
-				sat_img = scipy.ndimage.imread(self.folder+"/sat%s.jpg" % ind)
-				mask = scipy.ndimage.imread(self.folder+"/regionmask%s.jpg" % ind)
-				target = scipy.ndimage.imread(self.folder+"/lane%s.jpg" % ind)
+				#target = scipy.ndimage.imread(self.folder+"/lane%s.jpg" % ind)
+				target = imageio.imread(self.folder+"/lane%s.jpg" % ind)
+
 				#target_t = scipy.ndimage.imread(self.folder+"/terminal%s.jpg" % ind)
-				normal = scipy.ndimage.imread(self.folder+"/normal%s.jpg" % ind)
-				
-				
+				#target_t = imageio.imread(self.folder+"/terminal%s.jpg" % ind)
+
+				#normal = scipy.ndimage.imread(self.folder+"/normal%s.jpg" % ind)
+				normal = imageio.imread(self.folder+"/normal%s.jpg" % ind)
+
 				#target_t = cv2.GaussianBlur(target_t, (5,5), 1.0)
 
 				if len(np.shape(mask)) == 3:
 					mask = mask[:,:,0]
-				
+
 				if len(np.shape(target)) == 3:
 					target = target[:,:,0]
 
@@ -111,21 +119,21 @@ class Dataloader():
 						newlocallink = []
 						for k in range(len(locallink)):
 							pos = [locallink[k][0], locallink[k][1]]
-							pos = rotate(pos, -angle, self.datasetImageSize) 
+							pos = rotate(pos, -angle, self.datasetImageSize)
 							if pos[0] < 0 or pos[0] > self.datasetImageSize or pos[1] < 0 or pos[1] > self.datasetImageSize:
 								oor = True
 								break
-							
+
 							newlocallink.append(pos)
 
 						if oor == False:
 							newlocallinks.append(newlocallink)
-					
+
 					if len(newlocallinks) == 0:
-						continue 
-					
+						continue
+
 					links[2] = newlocallinks
-							
+
 					new_nodes = {}
 					for k in nodes.keys():
 						pos = nodes[k]
@@ -135,11 +143,11 @@ class Dataloader():
 						new_nodes[k] = pos
 
 					if len(new_nodes) == 0:
-						continue 
+						continue
 
 					links[1] = new_nodes
 
-				
+
 
 				normal = (normal.astype(np.float) - 127) / 127.0
 				normal = normal[:,:,1:3] # cv2 is BGR scipy and Image PIL are RGB
@@ -154,12 +162,12 @@ class Dataloader():
 				normal[:,:,1] = new_normal_y
 
 
-				
-				sat_img = sat_img.astype(np.float) / 255.0 - 0.5 
-				mask = mask.astype(np.float) / 255.0 
+
+				sat_img = sat_img.astype(np.float) / 255.0 - 0.5
+				mask = mask.astype(np.float) / 255.0
 				target = target.astype(np.float) / 255.0
 				#target_t = target_t.astype(np.float) / 255.0
-				
+
 				self.links.append(links)
 
 				self.images[i,:,:,:] = sat_img
@@ -168,27 +176,27 @@ class Dataloader():
 				#self.targets_t[i,:,:,0] = target_t
 				self.normal[i,:,:,:] = normal
 
-				# augmentation on images 
+				# augmentation on images
 				if self.testing == False:
 					self.images[i,:,:,:] = self.images[i,:,:,:] * (0.8 + 0.2 * random.random()) - (random.random() * 0.4 - 0.2)
 					self.images[i,:,:,:] = np.clip(self.images[i,:,:,:], -0.5, 0.5)
 
 					self.images[i,:,:,0] = self.images[i,:,:,0] * (0.8 + 0.2 * random.random())
 					self.images[i,:,:,1] = self.images[i,:,:,1] * (0.8 + 0.2 * random.random())
-					self.images[i,:,:,2] = self.images[i,:,:,2] * (0.8 + 0.2 * random.random())			
+					self.images[i,:,:,2] = self.images[i,:,:,2] * (0.8 + 0.2 * random.random())
 
 				break
-		
+
 		self.getBatchInternal(self.maxbatchsize)
 
 	def getBatchInternal(self, batchsize):
-		#print("getting batch")
+		#print(f">>> getting batch")
 
 		img = np.zeros((self.image_size, self.image_size), dtype=np.uint8)
 		connector1 = np.zeros((self.image_size, self.image_size), dtype=np.uint8)
 		connector2 = np.zeros((self.image_size, self.image_size), dtype=np.uint8)
 		connectorlink = np.zeros((self.image_size, self.image_size), dtype=np.uint8)
-		
+
 		for i in range(batchsize):
 			while True:
 				tile_id = random.randint(0,self.preload_tiles-1)
@@ -200,10 +208,10 @@ class Dataloader():
 				# sample two connected points
 				coin = random.randint(0,1)
 
-				# force coin to be only 0 
+				# force coin to be only 0
 				coin = 0
 
-				
+
 				#print(i, tile_id, coin)
 				if coin == 0:
 					locallink = random.choice(locallinks)
@@ -218,16 +226,18 @@ class Dataloader():
 					sr -= self.image_size // 2
 					sc -= self.image_size // 2
 
-					if sr < 0: 
-						sr = 0 
+					if sr < 0:
+						sr = 0
+
 					if sr + self.image_size >= self.datasetImageSize:
 						sr = self.datasetImageSize - self.image_size
 
-					if sc < 0: 
-						sc = 0 
+					if sc < 0:
+						sc = 0
+
 					if sc + self.image_size >= self.datasetImageSize:
 						sc = self.datasetImageSize - self.image_size
-					
+
 					img = img * 0
 					#connector = connector * 0
 
@@ -245,10 +255,10 @@ class Dataloader():
 					# 	ed = len(vertices) - 1
 
 					for k in range(len(vertices)-1):
-						x1 = vertices[k][0] - sc 
-						y1 = vertices[k][1] - sr 
-						x2 = vertices[k+1][0] - sc 
-						y2 = vertices[k+1][1] - sr 
+						x1 = vertices[k][0] - sc
+						y1 = vertices[k][1] - sr
+						x2 = vertices[k+1][0] - sc
+						y2 = vertices[k+1][1] - sr
 
 						cv2.line(img, (x1,y1), (x2,y2), (255), 5)
 
@@ -268,10 +278,9 @@ class Dataloader():
 						continue
 					if y1 < 0 or y1 >= self.image_size or y2 < 0 or y2 >= self.image_size:
 						continue
-					
+
 					#connectorlink *= 0
 					#cv2.line(connectorlink, (x1,y1), (x2,y2), (255),8)
-
 
 					self.target_batch[i,:,:,0] = np.copy(img) / 255.0
 
@@ -283,9 +292,9 @@ class Dataloader():
 
 					self.target_label_batch[i,0] = 1
 					self.image_batch[i,:,:,:] = self.images[tile_id, sr:sr+self.image_size, sc:sc+self.image_size, :]
-					#self.target_t_batch[i,:,:,0] = self.targets_t[tile_id, sr:sr+self.image_size, sc:sc+self.image_size, 0] 
+					#self.target_t_batch[i,:,:,0] = self.targets_t[tile_id, sr:sr+self.image_size, sc:sc+self.image_size, 0]
 					self.normal_batch[i,:,:,:] = self.normal[tile_id, sr:sr+self.image_size, sc:sc+self.image_size, :]
-					
+
 				else:
 					nid1 = random.choice(nodes.keys())
 					candidate = []
@@ -296,14 +305,14 @@ class Dataloader():
 
 						if nid2 in nidmap[nid1]:
 							continue
-						
+
 						r = 8 * 40
 						D = (pos2[0] - pos1[0]) ** 2 + abs(pos2[1] - pos1[1]) ** 2
 						if D > r**2:
 							continue
-						
+
 						candidate.append([nid2, pos2])
-					
+
 					if len(candidate) == 0:
 						continue
 
@@ -318,24 +327,24 @@ class Dataloader():
 					sr -= self.image_size // 2
 					sc -= self.image_size // 2
 
-					if sr < 0: 
-						sr = 0 
+					if sr < 0:
+						sr = 0
 					if sr + self.image_size >= self.datasetImageSize:
 						sr = self.datasetImageSize - self.image_size
 
-					if sc < 0: 
-						sc = 0 
+					if sc < 0:
+						sc = 0
 					if sc + self.image_size >= self.datasetImageSize:
 						sc = self.datasetImageSize - self.image_size
-							
+
 
 					img = img * 0
 					connector1 = connector1 * 0
 					connector2 = connector2 * 0
 
-					x1 = pos1[0] - sc 
-					y1 = pos1[1] - sr 
-					x2 = pos2[0] - sc 
+					x1 = pos1[0] - sc
+					y1 = pos1[1] - sr
+					x2 = pos2[0] - sc
 					y2 = pos2[1] - sr
 
 					#print(x1,y1,x2,y2)
@@ -360,13 +369,12 @@ class Dataloader():
 					self.target_label_batch[i,0] = 0
 
 					self.image_batch[i,:,:,:] = self.images[tile_id, sr:sr+self.image_size, sc:sc+self.image_size, :]
-					#self.target_t_batch[i,:,:,0] = self.targets_t[tile_id, sr:sr+self.image_size, sc:sc+self.image_size, 0] 
+					#self.target_t_batch[i,:,:,0] = self.targets_t[tile_id, sr:sr+self.image_size, sc:sc+self.image_size, 0]
 					self.normal_batch[i,:,:,:] = self.normal[tile_id, sr:sr+self.image_size, sc:sc+self.image_size, :]
-					
-				#print("we reach here")		
+
 				break
-		
-		#print("getting batch done")
+
+		print(f">>> getting batch done")
 		return self.image_batch[:batchsize, :,:,:], self.connector_batch[:batchsize,:,:,:], self.target_batch[:batchsize, :,:,:], self.target_label_batch[:batchsize,:], self.normal_batch[:batchsize,:,:,:]
 
 	def getBatch(self, batchsize):
@@ -382,9 +390,7 @@ class ParallelDataLoader():
 		self.subloader = []
 		self.subloaderReadyEvent = []
 		self.subloaderWaitEvent = []
-		
-		self.current_loader_id = 0 
-
+		self.current_loader_id = 0
 
 		for i in range(self.n):
 			self.subloader.append(Dataloader(*args,**kwargs))
@@ -394,20 +400,20 @@ class ParallelDataLoader():
 		for i in range(self.n):
 			self.subloaderReadyEvent[i].clear()
 			self.subloaderWaitEvent[i].clear()
+
 		for i in range(self.n):
 			x = threading.Thread(target=self.daemon, args=(i,))
-			x.start() 
+			x.start()
 
 
 	def daemon(self, tid):
 		c = 0
 
 		while True:
-			# 
 			t0 = time()
 			print("thread-%d starts preloading" % tid)
 			self.subloader[tid].preload(None)
-			
+
 			self.subloaderReadyEvent[tid].set()
 
 			print("thread-%d finished preloading (time = %.2f)" % (tid, time()-t0))
@@ -418,22 +424,20 @@ class ParallelDataLoader():
 			if c == 0 and tid == 0:
 				self.subloaderWaitEvent[tid].wait()
 				self.subloaderWaitEvent[tid].clear()
-			
+
 			c = c + 1
 
 
 	def preload(self):
-		# release the current one 
+		# release the current one
 		self.subloaderWaitEvent[self.current_loader_id].set()
-
 		self.current_loader_id = (self.current_loader_id + 1) % self.n
-		
 		self.subloaderReadyEvent[self.current_loader_id].wait()
 		self.subloaderReadyEvent[self.current_loader_id].clear()
 
-
 	def getBatch(self,batch_size):
 		return self.subloader[self.current_loader_id].getBatch(batch_size)
+
 	def current(self):
 		return self.subloader[self.current_loader_id]
 
