@@ -1,19 +1,17 @@
-#import rdp
-# Code Copied From Favyen
-
-import scipy.ndimage
-from scipy.ndimage.filters import gaussian_filter
-import skimage.morphology
-import os
-import numpy
-from multiprocessing import Pool
-import sys
 from math import sqrt
-from postprocessing import graph_refine, connectDeadEnds, downsample
-
-import os 
+import os
 import sys 
 sys.path.append(os.path.dirname(sys.path[0]))
+
+import skimage.morphology
+import numpy as np
+import scipy.ndimage
+#from scipy.ndimage.filters import gaussian_filter      # dky: DEPRECATED - DO NOT USE
+#from scipy.ndimage import gaussian_filter
+
+from multiprocessing import Pool
+from postprocessing import graph_refine, connectDeadEnds, downsample
+
 
 def distance(a, b):
     return  sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
@@ -29,6 +27,7 @@ def point_line_distance(point, start, end):
             (end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2
         )
         return n / d
+
 
 def rdp(points, epsilon):
     """
@@ -58,11 +57,11 @@ def segtograph(in_fname, threshold, isolated_thr = 32, spur_thr = 0, deadend_thr
         im = in_fname 
 
     if len(im.shape) == 3:
-        print 'warning: bad shape {}, using first channel only'.format(im.shape)
+        print(f"warning: bad shape {im.shape}, using first channel only")
         im = im[:, :, 0]
-    im = numpy.swapaxes(im, 0, 1)
+    im = np.swapaxes(im, 0, 1)
 
-    im = gaussian_filter(im, sigma=3)
+    im = scipy.ndimage.gaussian_filter(im, sigma=3)
 
     #Image.fromarray(im).save("seg2graphdebugstep1.png")
     im = scipy.ndimage.grey_closing(im, size=(6,6))
@@ -93,7 +92,7 @@ def segtograph(in_fname, threshold, isolated_thr = 32, spur_thr = 0, deadend_thr
             if len(point_to_neighbors[(i, j)]) == 0:
                 del point_to_neighbors[(i, j)]
         else:
-            w = numpy.where(im > 0)
+            w = np..where(im > 0)
             if len(w[0]) == 0:
                 break
             i, j = w[0][0], w[1][0]

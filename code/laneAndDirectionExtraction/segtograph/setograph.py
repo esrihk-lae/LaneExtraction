@@ -1,27 +1,28 @@
-#import rdp
-# Code Copied From Favyen
-
-import imageio.v2 as imageio
-import scipy.ndimage
-from scipy.ndimage.filters import gaussian_filter
-import skimage.morphology
 import os
-from PIL import Image
 #import math
-import numpy
-import numpy as np
-from multiprocessing import Pool
-#import subprocess
-import sys
 from math import sqrt
+
+import sys
+sys.path.append(os.path.dirname(sys.path[0]))
+
+
+#import rdp
+import imageio.v2 as imageio # pyright: ignore[reportMissingImports]
+import scipy.ndimage
+#from scipy.ndimage.filters import gaussian_filter			# dky: deprecated
+from scipy.ndimage import gaussian_filter
+
+import skimage.morphology
+from PIL import Image
+import numpy as np # pyright: ignore[reportMissingImports]
+#from multiprocessing import Pool
+#import subprocess
 import pickle
 from postprocessing import graph_refine, connectDeadEnds, downsample
-import cv2 
+import cv2 # pyright: ignore[reportMissingImports]
+
 from douglasPeucker import simpilfyGraph
 
-import os 
-import sys 
-sys.path.append(os.path.dirname(sys.path[0]))
 
 # from osm.graph_ops import graphDensifyPixel
 
@@ -29,17 +30,15 @@ sys.path.append(os.path.dirname(sys.path[0]))
 def distance(a, b):
 	return  sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
 
+
 def point_line_distance(point, start, end):
 	if (start == end):
 		return distance(point, start)
 	else:
-		n = abs(
-			(end[0] - start[0]) * (start[1] - point[1]) - (start[0] - point[0]) * (end[1] - start[1])
-		)
-		d = sqrt(
-			(end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2
-		)
+		n = abs((end[0] - start[0]) * (start[1] - point[1]) - (start[0] - point[0]) * (end[1] - start[1]))
+		d = sqrt((end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2)
 		return n / d
+
 
 def rdp(points, epsilon):
 	"""
@@ -67,12 +66,12 @@ in_fname = sys.argv[1]
 threshold = int(sys.argv[2])
 out_fname = sys.argv[3]
 
-#im = scipy.ndimage.imread(in_fname)  # dky: replace scipy.ndimage.imread with imageio.imread
+#im = scipy.ndimage.imread(in_fname)  		# dky: replace scipy.ndimage.imread with imageio.imread
 im = imageio.imread(in_fname, mode='RGB')	# dky: imageio replacement for scipy.ndmimage.imread; set mode to RGB
 
 if len(im.shape) == 3:
 	im = im[:, :, 0]
-im = numpy.swapaxes(im, 0, 1)
+im = np.swapaxes(im, 0, 1)
 
 
 # some refinement
@@ -109,12 +108,12 @@ im = im >= threshold
 
 #im = im >= threshold
 
-#bigim = numpy.zeros((im.shape[0] + 2*PADDING, im.shape[1] + 2*PADDING), dtype='bool')
+#bigim = np.zeros((im.shape[0] + 2*PADDING, im.shape[1] + 2*PADDING), dtype='bool')
 #bigim[PADDING:PADDING+im.shape[0], PADDING:PADDING+im.shape[1]] = im
-#bigim[0:PADDING, PADDING:PADDING+im.shape[1]] = numpy.tile(im[0:1, :], [PADDING, 1])
-#bigim[-PADDING:, PADDING:PADDING+im.shape[1]] = numpy.tile(im[-1:, :], [PADDING, 1])
-#bigim[PADDING:PADDING+im.shape[1], 0:PADDING] = numpy.tile(im[:, 0:1], [1, PADDING])
-#bigim[PADDING:PADDING+im.shape[1], -PADDING:] = numpy.tile(im[0, -1:], [1, PADDING])
+#bigim[0:PADDING, PADDING:PADDING+im.shape[1]] = np.tile(im[0:1, :], [PADDING, 1])
+#bigim[-PADDING:, PADDING:PADDING+im.shape[1]] = np.tile(im[-1:, :], [PADDING, 1])
+#bigim[PADDING:PADDING+im.shape[1], 0:PADDING] = np.tile(im[:, 0:1], [1, PADDING])
+#bigim[PADDING:PADDING+im.shape[1], -PADDING:] = np.tile(im[0, -1:], [1, PADDING])
 #im = bigim
 
 # apply morphological dilation and thinning
@@ -144,7 +143,7 @@ while True:
 		if len(point_to_neighbors[(i, j)]) == 0:
 			del point_to_neighbors[(i, j)]
 	else:
-		w = numpy.where(im > 0)
+		w = np.where(im > 0)
 		if len(w[0]) == 0:
 			break
 		i, j = w[0][0], w[1][0]
@@ -225,7 +224,7 @@ for edge in edges:
 
 #g = graph_refine(neighbors)
 #g = connectDeadEnds(g)
-##g = simpilfyGraph(g, e=5)
+#g = simpilfyGraph(g, e=5)
 #g = downsample(g)
 #g = neighbors
 
@@ -233,7 +232,7 @@ g = graph_refine(neighbors, isolated_thr = 32, spurs_thr=0)
 g = connectDeadEnds(g, thr = 16)
 g = simpilfyGraph(g, e=5)
 # g = graphDensifyPixel(g, 50)
-pickle.dump(g, open(out_fname, "wb"))	# dky: change write to binary write
+pickle.dump(g, open(out_fname, "wb"))		# dky: change write to binary write
 
 dim = np.shape(im)
 img = np.zeros((dim[0], dim[1]), dtype= np.uint8)
