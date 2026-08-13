@@ -130,12 +130,12 @@ def relu(x):
 ##################################################################################
 
 def batch_norm(x, is_training=True, scope='batch_norm'):
-    #return x 
-    #print("resnet batch norm hit!")
+    #return x
+    print(f">>> resnet batch norm hit!")
     return tf_contrib.layers.batch_norm(x,
                                        decay=0.99, epsilon=1e-05,
                                        center=True, scale=True, updates_collections=None,
-                                       is_training=is_training, scope=scope, fused = False)
+                                       is_training=is_training, scope=scope, fused=False)
 
 ##################################################################################
 # Loss function
@@ -195,7 +195,7 @@ def resnet(x, is_training=True, reuse=False, res_n = 18, feature_size = 126, ch 
         x = global_avg_pooling(x)
         x = fully_conneted(x, units=feature_size, scope='logit')
 
-        return 
+        return
 
 def resnet18plus(x, is_training=True, reuse=False, res_n = 18, feature_size = 126):
     with tf.variable_scope("network", reuse=reuse):
@@ -235,7 +235,7 @@ def resnet18plus(x, is_training=True, reuse=False, res_n = 18, feature_size = 12
             x = residual_block(x, channels=ch*8, is_training=is_training, downsample=False, scope='resblock_3_' + str(i))
 
         ########################################################################################################
-        # 48*48*256  
+        # 48*48*256
         i = 1
         x = residual_block(x, channels=ch*8, is_training=is_training, downsample=True, scope='resblock_4_0') # 24*24
         x = residual_block(x, channels=ch*8, is_training=is_training, downsample=False, scope='resblock_4_' + str(i))
@@ -250,7 +250,7 @@ def resnet18plus(x, is_training=True, reuse=False, res_n = 18, feature_size = 12
         # 6*6*256
 
         x = batch_norm(x, is_training, scope='batch_norm')
-        
+
         x = tf.reshape(x,[-1, 6*6*256])
         #x = relu(x)
 

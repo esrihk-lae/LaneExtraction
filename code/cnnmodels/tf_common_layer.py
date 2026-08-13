@@ -1,15 +1,15 @@
 import numpy as np
 import tensorflow as tf
-import tflearn
+#import tflearn		# dky: unused import
 from tensorflow.contrib.layers.python.layers import batch_norm
 import tensorflow.contrib as tf_contrib
 
 weight_regularizer = tf_contrib.layers.l2_regularizer(0.0001)
 
-# for reuse 
+# for reuse
 
 def uniform(shape, scale=0.05, name=None):
-	"""Uniform init."""
+	"""Uniform init"""
 	initial = tf.random_uniform(shape, minval=-scale, maxval=scale, dtype=tf.float32)
 	return tf.get_variable(name, shape=shape, initializer = tf.initializer.random_uniform(minval=-scale, maxval = scale), dtype=tf.float32)
 	#return tf.Variable(initial, name=name, dtype=tf.float32)
@@ -52,68 +52,55 @@ def create_conv_layer(name, input_tensor, in_channels, out_channels, is_training
 	if deconv == False and nopadding == False:
 		input_tensor = tf.pad(input_tensor, [[0, 0], [(kx+(dilation-1)*2) //2, (kx+(dilation-1)*2)//2], [(kx+(dilation-1)*2)//2, (kx+(dilation-1)*2)//2], [0, 0]], mode="CONSTANT")
 
+	weights = tf.compat.v1.get_variable(name+'weights', shape=[kx, ky, in_channels, out_channels], initializer=tf.truncated_normal_initializer(stddev=np.sqrt(0.02 / kx / ky / in_channels)), regularizer=weight_regularizer, dtype=tf.float32)
+	biases = tf.compat.v1.get_variable(name+'biases', shape=[out_channels], initializer=tf.constant_initializer(0.0), regularizer=weight_regularizer, dtype=tf.float32)
 
-	weights = tf.compat.v1.get_variable(name+'weights', shape=[kx, ky, in_channels, out_channels],
-			initializer=tf.truncated_normal_initializer(stddev=np.sqrt(0.02 / kx / ky / in_channels)),
-			regularizer=weight_regularizer,
-			dtype=tf.float32
-	)
-	biases = tf.compat.v1.get_variable(name+'biases', shape=[out_channels], initializer=tf.constant_initializer(0.0),regularizer=weight_regularizer, dtype=tf.float32)
 
-	
 	if deconv == False:
 		try:
-			t = tf.nn.conv2d(input_tensor, weights, [1, stride_x, stride_y, 1], padding=padding, dilations = dilation)
-			print("create dilation layer with tensorflow 1.15 format")
+			print(f"Create dilation layer in TensorFlow 1.15 format")
+			t = tf.nn.conv2d(input_tensor, weights, [1, stride_x, stride_y, 1], padding=padding, dilations=dilation)
 		except:
-			print("try dilation with tensorflow 1.13 format")
-			t = tf.nn.conv2d(input_tensor, weights, [1, stride_x, stride_y, 1], padding=padding, dilations = [1,dilation,dilation,1])
-			
+			print(f"Create dilation layer in TensorFlow 1.13 format")
+			t = tf.nn.conv2d(input_tensor, weights, [1, stride_x, stride_y, 1], padding=padding, dilations=[1, dilation, dilation, 1])
+
 		s = tf.nn.bias_add(t, biases)
 
 	else:
 		batch = tf.shape(input_tensor)[0]
 		size = tf.shape(input_tensor)[1]
 
+		print(f">>> input_tensor={input_tensor}")
+		#print(f">>> tf.transpose()={tf.transpose(weights, perm=[0,1,3,2])}")
 
-		#print(input_tensor)
-		#print(tf.transpose(weights,perm=[0,1,3,2]))
-
-
-
-		t = tf.nn.conv2d_transpose(input_tensor, tf.transpose(weights,perm=[0,1,3,2]),[batch, size * stride_x, size * stride_y, out_channels], [1, stride_x, stride_y, 1],
-				padding='SAME', data_format = "NHWC")
-		
-		# t = tf.nn.conv2d_transpose(input_tensor, tf.transpose(weights,perm=[0,1,3,2]),tf.tensor([batch, size * stride_x, size * stride_y, out_channels]), [1, stride_x, stride_y, 1],
-		# 		padding='SAME', data_format = "NHWC")
-		
+		t = tf.nn.conv2d_transpose(input_tensor, tf.transpose(weights, perm=[0,1,3,2]), [batch, size * stride_x, size * stride_y, out_channels], [1, stride_x, stride_y, 1], padding='SAME', data_format="NHWC")
+		#t = tf.nn.conv2d_transpose(input_tensor, tf.transpose(weights,perm=[0,1,3,2]), tf.tensor([batch, size * stride_x, size * stride_y, out_channels]), [1, stride_x, stride_y, 1], padding='SAME', data_format="NHWC")
 
 		s = tf.nn.bias_add(t, biases)
 
+
 	if add is not None: # res
-		s = s + add 
+		s = s + add
 
 	if batchnorm:
-		#print("use batchnorm ", name)
+		print(f">>> batchnorm: {name}")
 		#n = batch_norm(s, decay = 0.99, center=True, scale=True, updates_collections=None, is_training=is_training, epsilon=0.01)
 		# fused = False
 		#n = batch_norm(s, decay = 0.99, center=True, scale=True, updates_collections=None, is_training=is_training, scope = name, fused = False)
-		n = batch_norm(s, decay = 0.99, center=True, scale=True, updates_collections=None, is_training=is_training, fused = False)
+		n = batch_norm(s, decay = 0.99, center=True, scale=True, updates_collections=None, is_training=is_training, fused=False)
 
-		# remove 'scope = name' to support old checkpoints. 
-
-
+		# remove 'scope = name' to support old checkpoints
 
 		#n = tf.layers.batch_normalization(s, training=is_training, renorm=True)
 	else:
-		n = s 
+		n = s
 
 	if activation == 'relu':
-			return tf.nn.relu(n), weights, biases
+		return tf.nn.relu(n), weights, biases
 	elif activation == 'sigmoid':
-			return tf.nn.sigmoid(n), weights, biases
+		return tf.nn.sigmoid(n), weights, biases
 	elif activation == 'tanh':
-			return tf.nn.tanh(n), weights, biases
+		return tf.nn.tanh(n), weights, biases
 	elif activation == 'linear':
-			return n, weights, biases
+		return n, weights, biases
 
