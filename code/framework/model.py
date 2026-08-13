@@ -1,4 +1,4 @@
-import tensorflow as tf 
+import tensorflow as tf 		# pyright: ignore[reportMissingModuleSource]
 
 class ModelFramework():
 	def __init__(self):
@@ -18,14 +18,14 @@ class ModelFramework():
 	def addTrainOp(self, loss):
 		self.train_op = tf.train.AdamOptimizer(learning_rate=self.inputs["lr"]).minimize(loss)
 		self.addOp("train_op", self.train_op)
-		
+
 	def addOp(self, name, tensor):
 		self.ops[name] = tensor
 
 	def run(self, inputs, ops):
 		feed_dict ={}
 		for k,v in inputs.items():
-			feed_dict[self.inputs[k]] = v 
+			feed_dict[self.inputs[k]] = v
 		return self.sess.run([self.ops[op] for op in ops], feed_dict = feed_dict)
 
 	def init(self, sess):
@@ -41,7 +41,7 @@ class ModelFramework():
 
 	def loss_ce_dice(self, p, target, mask):
 		t1 = target
-		
+
 		def ce_loss(p, t):
 			#t = tf.concat([t,1-t], axis=3)
 			pp0 = p[:,:,:,0:1]
@@ -60,9 +60,6 @@ class ModelFramework():
 
 		loss = 0
 		loss += ce_loss(p, t1) + dice_loss(p, t1) * 0.333
-		
-		return loss 
 
+		return loss
 
-
-	

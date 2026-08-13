@@ -1,4 +1,4 @@
-import sys 
+#import sys
 from subprocess import Popen 
 
 Popen("mkdir -p dataset_training", shell=True).wait()

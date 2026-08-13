@@ -1,7 +1,8 @@
 from time import time 
-import tensorflow as tf 
-import sys 
+#import sys
 import json
+import tensorflow as tf  # pyright: ignore[reportMissingModuleSource]
+
 
 class TrainingFramework():
 	def __init__(self):
@@ -31,12 +32,10 @@ class TrainingFramework():
 				logs[k][1].append(v)
 			else:
 				logs[k] = [[s],[v]]
-
 				
 
-
-		gpu_options = tf.GPUOptions(allow_growth=True)
-		with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
+		gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
+		with tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options)) as sess:
 			model = self.createModel(sess)
 			dataloader = self.createDataloader("training")
 			# if use_validation:
@@ -89,7 +88,7 @@ class TrainingFramework():
 
 					bar = ">" * p + "-" * (51 - p)
 					t_rem = t_other - t_preload - t_load - t_train
-					print(f"\rstep {step} epoch:{progress:.2f} {bar} loss {loss:.6f} time {t_preload:.6f} {t_load:.6f} {t_train:.6f} {t_rem:.6f} {s}", end="",flush=True)
+					print(f"\rstep {step} epoch:{progress:.2f} {bar} loss {loss:.6f} time {t_preload:.6f} {t_load:.6f} {t_train:.6f} {t_rem:.6f} {s}", end="", flush=True)
 
 					p = int((progress - int(progress)) * 100000)
 					if int(progress) != int(lastprogress):
@@ -99,8 +98,6 @@ class TrainingFramework():
 						t_preload = 0
 						t_train = 0 
 						t_other = 0
-
-						
 
 					loss = 0
 					lastprogress = progress 
@@ -128,9 +125,7 @@ class TrainingFramework():
 		else:
 			self.kv[k] = [v, 1]
 		
-			 
-
-
+		
 
 	# virtual methods
 	def createDataloader(self, mode):
