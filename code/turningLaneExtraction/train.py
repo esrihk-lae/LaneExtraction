@@ -1,4 +1,4 @@
-
+from datetime import datetime
 import math
 import json
 import os
@@ -50,7 +50,7 @@ class Train(TrainingFramework):
 		pass
 
 	def createDataloader(self, mode):
-		self.dataloader = ParallelDataLoader(self.datafolder, self.training_range, image_size = self.image_size)
+		self.dataloader = ParallelDataLoader(self.datafolder, self.training_range, image_size=self.image_size)
 		self.dataloader.preload()
 		return self.dataloader
 
@@ -62,13 +62,11 @@ class Train(TrainingFramework):
 	def getBatch(self, dataloader):
 		return dataloader.getBatch(self.batch_size)
 
-	def train(self, batch, lr):
-		self.counter += 1 
 
-		
+	def train(self, batch, lr):
+		self.counter += 1
 		ret = self.model.train(batch[0], batch[1], batch[2], batch[3], batch[4], lr)
 	
-
 		return ret
 
 
@@ -80,7 +78,7 @@ class Train(TrainingFramework):
 	# placeholder methods
 	def getLoss(self, result):
 		if math.isnan(result[0]):
-			print("loss is nan ...")
+			print(f"loss is nan ...")
 			exit()
 
 		return result[0]
@@ -88,10 +86,23 @@ class Train(TrainingFramework):
 	def getProgress(self, step):
 		return step / float(self.epochsize)
 
-	def saveModel(self, step):
-		if step > 0 and step % (self.epochsize * 5) == 0:
-			self.model.saveModel(self.modelfolder + "/model%d" % step)
-		return False
+	def saveModel(self, step, progress=None):
+		cur_epoch = int(progress)
+		cur_epoch_actual = round(progress, 2)
+
+		epochsize_actual = int(self.epochsize)
+		epochsize_actual_rounded = round(int(self.epochsize), -2)
+
+		#print(f">>> step {step} epoch {cur_epoch_actual}: checksum={cur_epoch_actual % 2.0}")
+
+		#if step > 0 and step % (self.epochsize * 5) == 0:
+		# dky TODO: cover end case:
+		# if step > 0 and (step % 1000 == 0 or cur_epoch == epochsize_actual):
+		if step > 0 and step % 1000 == 0:
+			save_path = os.path.join(self.modelfolder, f"model{step}")
+			self.model.saveModel(save_path)
+
+		return False	# do not stop training
 
 	def visualization(self, step, result=None, batch=None):
 		direction_img = np.zeros((self.image_size, self.image_size, 3))
@@ -124,7 +135,6 @@ class Train(TrainingFramework):
 				direction_img[:,:,1] += batch[1][i,:,:,3] * 255 + 127
 				direction_img[:,:,2] += batch[1][i,:,:,6] * 255 + 127
 				
-				
 				direction_img = np.clip(direction_img, 0, 255)
 
 				Image.fromarray(direction_img.astype(np.uint8)).save(self.validationfolder + "/direction%d.jpg" % (ind+i))
@@ -133,6 +143,9 @@ class Train(TrainingFramework):
 
 
 if __name__ == "__main__":
+	now = datetime.now()
+	timestamp = now.strftime("%Y%m%d-%H%M")
+
 	#trainer = Train(sys.argv[1])
 	trainer = Train()
 	epochsisze = trainer.epochsize
@@ -144,6 +157,6 @@ if __name__ == "__main__":
 	config["step_init"] = 0
 	config["step_max"] = epochsisze * 400 + 1
 	config["use_validation"] = False
-	config["logfile"] = "log_%s.json" % trainer.instance
-
+	#config["logfile"] = "log_%s.json" % trainer.instance
+	config["logfile"] = f"log_{trainer.instance}-{timestamp}.json"
 	trainer.run(config)

@@ -3,7 +3,7 @@ import json
 import math
 from time import time
 
-import numpy as np
+import numpy as np 		# pyright: ignore[reportMissingImports]
 import threading
 import imageio.v2 as imageio
 
@@ -55,19 +55,22 @@ class Dataloader():
 
 
 
-	def preload(self, ind = None):
+	def preload(self, ind=None):
 		# global global_lock
-
 		# global_lock.acquire()
 		# for laneMap in self.laneMaps:
 		# 	laneMap.save(self.fgt_folder)
 		# self.laneMaps = []
 		# global_lock.release()
+
 		self.links = []
 		for i in range(self.preload_tiles if ind is None else 1):
 			while True:
 				ind = random.choice(self.indrange)# if ind is None else ind
-				links = json.load(open(self.folder+"/link%s.json" % ind))
+
+				#links = json.load(open(self.folder+"/link%s.json" % ind))
+				with open(f"{self.folder}/link{ind}.json") as f:
+					links = json.load(f)
 
 				if len(links[2]) == 0:
 					continue
@@ -189,6 +192,7 @@ class Dataloader():
 
 		self.getBatchInternal(self.maxbatchsize)
 
+
 	def getBatchInternal(self, batchsize):
 		#print(f">>> getting batch")
 
@@ -199,20 +203,19 @@ class Dataloader():
 
 		for i in range(batchsize):
 			while True:
-				tile_id = random.randint(0,self.preload_tiles-1)
-				nidmap, nodes, locallinks = self.links[tile_id]
+				tile_id = random.randint(0, self.preload_tiles-1)
+				nidmap, nodes, locallinks=self.links[tile_id]
 				if len(locallinks) == 0:
 					continue
 
 				# sample two in-connected points
 				# sample two connected points
-				coin = random.randint(0,1)
+				coin = random.randint(0,1)			# dky: WHY???????????
 
 				# force coin to be only 0
-				coin = 0
+				coin = 0			# dky: WHY????????????
 
-
-				#print(i, tile_id, coin)
+				#print(f">>> i={i}, tile_id={tile_id}, coin={coin}")
 				if coin == 0:
 					locallink = random.choice(locallinks)
 					vertices = locallink
@@ -243,7 +246,6 @@ class Dataloader():
 
 					connector1 = connector1 * 0
 					connector2 = connector2 * 0
-
 
 					#st = random.randint(st-1,st+1)
 					#ed = random.randint(ed-1,ed+1)
@@ -362,8 +364,6 @@ class Dataloader():
 					self.connector_batch[i,:,:,4:6] = self.poscode[self.image_size - y2:self.image_size*2 - y2, self.image_size - x2:self.image_size*2 - x2, :]
 					self.connector_batch[i,:,:,6] = np.copy(connectorlink) / 255.0 - 0.5
 
-
-
 					self.target_batch[i,:,:,0] = np.copy(img) / 255.0
 					#self.connector_batch[i,:,:,0] = np.copy(connector) / 255.0
 					self.target_label_batch[i,0] = 0
@@ -374,7 +374,7 @@ class Dataloader():
 
 				break
 
-		print(f">>> getting batch done")
+		#print(f">>> getting batch done")
 		return self.image_batch[:batchsize, :,:,:], self.connector_batch[:batchsize,:,:,:], self.target_batch[:batchsize, :,:,:], self.target_label_batch[:batchsize,:], self.normal_batch[:batchsize,:,:,:]
 
 	def getBatch(self, batchsize):
@@ -405,18 +405,20 @@ class ParallelDataLoader():
 			x = threading.Thread(target=self.daemon, args=(i,))
 			x.start()
 
+		print(f">>> ParallelDataLoader() done")
+
 
 	def daemon(self, tid):
 		c = 0
 
 		while True:
 			t0 = time()
-			print("thread-%d starts preloading" % tid)
-			self.subloader[tid].preload(None)
 
+			print(f"thread-{tid}: start preloading")
+			self.subloader[tid].preload(None)
 			self.subloaderReadyEvent[tid].set()
 
-			print("thread-%d finished preloading (time = %.2f)" % (tid, time()-t0))
+			print(f"thread-{tid}: finished preloading (time = {time() - t0:.2f})")
 
 			self.subloaderWaitEvent[tid].wait()
 			self.subloaderWaitEvent[tid].clear()

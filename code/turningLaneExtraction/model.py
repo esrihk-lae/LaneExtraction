@@ -36,7 +36,6 @@ class LinkModel():
 			#output_seg = resnet34unet_v3(input_data, self.is_training, ch_in = 14, ch_out = 4, feature_out=False)			# dky: testing - match laneAndDirectionExtraction due to OOM issues
 
 
-
 		self.output = tf.nn.softmax(output_seg)
 
 		self.loss = self.singlescaleloss(output_seg[:,:,:,0:2], self.target, 1.0)
