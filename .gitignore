@@ -22,7 +22,11 @@ model*.data*
 dataset/*.p
 dataset/*.jpg
 code/*/*.jpg
-code/*/*/*.jpg
+code/*/**/ways.json
+code/*/**/*.jpg
+code/*/**/*.p
+code/*/**/*.png
+code/*/**/*.png
 link_*.json
 
 
