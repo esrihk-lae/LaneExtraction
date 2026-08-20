@@ -28,7 +28,7 @@ class LaneModel():
 		# else:
 
 		if self.backbone == "resnet34v3":
-			output = resnet34unet_v3(self.input, self.is_training, ch_in = 3, ch_out = 4)
+			output = resnet34unet_v3(self.input, self.is_training, ch_in=3, ch_out=4)
 		elif self.backbone == "resnet18v3":
 			output = resnet34unet_v3(self.input, self.is_training, ch_in = 3, ch_out = 4, res_n = 18)
 		elif self.backbone == "unet":
@@ -104,7 +104,7 @@ class LaneModel():
 		return self.sess.run(ops, feed_dict=feed_dict)
 
 
-	def infer(self, x_in, sdmap = None):
+	def infer(self, x_in, sdmap=None):
 		feed_dict = {
 			self.input : x_in,
 			self.is_training : False
