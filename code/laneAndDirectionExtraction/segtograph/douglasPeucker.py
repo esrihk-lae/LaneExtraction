@@ -9,14 +9,19 @@ def distance(p1,p2):
 
 
 def point2lineDistance(p, n1, n2):
-	l = distance(n1,n2)
+	l = distance(n1, n2)
 
 	v1 = [n1[0]-p[0], n1[1]-p[1]]
 	v2 = [n2[0]-p[0], n2[1]-p[1]]
 	
 	area = abs(v1[0]*v2[1]-v1[1]*v2[0])
 
-	return area/l
+	# dky: sanity check - 2026-08-20 edge case where l was 0
+	if area is None or area == 0 or l is None or l == 0:
+		print(f">>> FOUND BAD DATA: area={area}, l={l}")
+		return 0
+	else:
+		return area/l
 
 
 def douglasPeucker(node_list, e = 5):
