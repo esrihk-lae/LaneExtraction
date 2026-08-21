@@ -7,6 +7,7 @@ import tensorflow as tf		# pyright: ignore[reportMissingModuleSource]
 
 from cnnmodels.resnet34unet import resnet34unet_v3
 
+
 class LinkModel():
 	def __init__(self, sess, size=640, batchsize=4):
 		self.sess = sess
@@ -18,7 +19,7 @@ class LinkModel():
 		self.target = tf.compat.v1.placeholder(dtype=tf.float32, shape = [None, size, size, 1])
 		self.target_label = tf.compat.v1.placeholder(dtype=tf.float32, shape = [None, 1])
 
-		self.position_code = tf.compat.v1.placeholder(dtype = tf.float32, shape = [None, size, size, 2])
+		self.position_code = tf.compat.v1.placeholder(dtype=tf.float32, shape = [None, size, size, 2])
 		self.position_code_np = np.zeros((batchsize, size, size, 2))
 
 		for i in range(size):
@@ -32,8 +33,8 @@ class LinkModel():
 		input_data = tf.concat([self.input, self.connector, self.context, self.position_code], axis=3)
 
 		with tf.compat.v1.variable_scope("seg"):
-			output_seg = resnet34unet_v3(input_data, self.is_training, ch_in = 14, ch_out = 2, feature_out=False)			# dky: orig
-			#output_seg = resnet34unet_v3(input_data, self.is_training, ch_in = 14, ch_out = 4, feature_out=False)			# dky: testing - match laneAndDirectionExtraction due to OOM issues
+			output_seg = resnet34unet_v3(input_data, self.is_training, ch_in=14, ch_out=2, feature_out=False)			# dky: orig
+			#output_seg = resnet34unet_v3(input_data, self.is_training, ch_in=14, ch_out=4, feature_out=False)			# dky: testing - match laneAndDirectionExtraction due to OOM issues
 
 
 		self.output = tf.nn.softmax(output_seg)
