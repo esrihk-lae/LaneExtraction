@@ -131,7 +131,7 @@ def relu(x):
 
 def batch_norm(x, is_training=True, scope='batch_norm'):
     #return x
-    print(f">>> resnet batch norm hit!")
+    #print(f">>> resnet batch norm hit!")
     return tf_contrib.layers.batch_norm(x,
                                        decay=0.99, epsilon=1e-05,
                                        center=True, scale=True, updates_collections=None,
@@ -251,7 +251,7 @@ def resnet18plus(x, is_training=True, reuse=False, res_n = 18, feature_size = 12
 
         x = batch_norm(x, is_training, scope='batch_norm')
 
-        x = tf.reshape(x,[-1, 6*6*256])
+        x = tf.reshape(x, [-1, 6*6*256])
         #x = relu(x)
 
         #x = global_avg_pooling(x)
