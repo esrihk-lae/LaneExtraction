@@ -1,7 +1,7 @@
-import numpy as np
-import tensorflow as tf
-#import tflearn		# dky: unused import
-from tensorflow.contrib.layers.python.layers import batch_norm
+import numpy as np 			# pyright: ignore[reportMissingImports]
+import tensorflow as tf		# pyright: ignore[reportMissingImports]
+#import tflearn				# dky: unused import
+from tensorflow.contrib.layers.python.layers import batch_norm	 # pyright: ignore[reportMissingImports]
 import tensorflow.contrib as tf_contrib
 
 weight_regularizer = tf_contrib.layers.l2_regularizer(0.0001)
@@ -11,7 +11,7 @@ weight_regularizer = tf_contrib.layers.l2_regularizer(0.0001)
 def uniform(shape, scale=0.05, name=None):
 	"""Uniform init"""
 	initial = tf.random_uniform(shape, minval=-scale, maxval=scale, dtype=tf.float32)
-	return tf.get_variable(name, shape=shape, initializer = tf.initializer.random_uniform(minval=-scale, maxval = scale), dtype=tf.float32)
+	return tf.get_variable(name, shape=shape, initializer=tf.initializer.random_uniform(minval=-scale, maxval=scale), dtype=tf.float32)
 	#return tf.Variable(initial, name=name, dtype=tf.float32)
 
 
@@ -19,7 +19,7 @@ def glorot(shape, name=None):
 	"""Glorot & Bengio (AISTATS 2010) init."""
 	#init_range = np.sqrt(6.0/(shape[0]+shape[1]))
 	#initial = tf.random_uniform(shape, minval=-init_range, maxval=init_range, dtype=tf.float32)
-	return tf.get_variable(name, shape = shape, initializer = tf.glorot_uniform_initializer(), dtype=tf.float32)
+	return tf.get_variable(name, shape=shape, initializer=tf.glorot_uniform_initializer(), dtype=tf.float32)
 	#return tf.Variable(initial, name=name)
 
 
@@ -48,7 +48,7 @@ def dot(x, y, sparse=False):
 	return res
 
 
-def create_conv_layer(name, input_tensor, in_channels, out_channels, is_training = True, activation='relu', kx = 3, ky = 3, stride_x = 2, stride_y = 2, batchnorm=False, padding='VALID', add=None, deconv = False, dilation = 1, nopadding = False):
+def create_conv_layer(name, input_tensor, in_channels, out_channels, is_training=True, activation='relu', kx=3, ky=3, stride_x=2, stride_y=2, batchnorm=False, padding='VALID', add=None, deconv=False, dilation=1, nopadding=False):
 	if deconv == False and nopadding == False:
 		input_tensor = tf.pad(input_tensor, [[0, 0], [(kx+(dilation-1)*2) //2, (kx+(dilation-1)*2)//2], [(kx+(dilation-1)*2)//2, (kx+(dilation-1)*2)//2], [0, 0]], mode="CONSTANT")
 
@@ -58,10 +58,10 @@ def create_conv_layer(name, input_tensor, in_channels, out_channels, is_training
 
 	if deconv == False:
 		try:
-			print(f"Create dilation layer in TensorFlow 1.15 format")
+			print(f"{name} Create dilation layer in TensorFlow 1.15 format: {input_tensor}")
 			t = tf.nn.conv2d(input_tensor, weights, [1, stride_x, stride_y, 1], padding=padding, dilations=dilation)
 		except:
-			print(f"Create dilation layer in TensorFlow 1.13 format")
+			print(f"{name} Create dilation layer in TensorFlow 1.13 format: {input_tensor}")
 			t = tf.nn.conv2d(input_tensor, weights, [1, stride_x, stride_y, 1], padding=padding, dilations=[1, dilation, dilation, 1])
 
 		s = tf.nn.bias_add(t, biases)
@@ -70,7 +70,7 @@ def create_conv_layer(name, input_tensor, in_channels, out_channels, is_training
 		batch = tf.shape(input_tensor)[0]
 		size = tf.shape(input_tensor)[1]
 
-		print(f">>> input_tensor={input_tensor}")
+		#print(f">>> input_tensor={input_tensor}")
 		#print(f">>> tf.transpose()={tf.transpose(weights, perm=[0,1,3,2])}")
 
 		t = tf.nn.conv2d_transpose(input_tensor, tf.transpose(weights, perm=[0,1,3,2]), [batch, size * stride_x, size * stride_y, out_channels], [1, stride_x, stride_y, 1], padding='SAME', data_format="NHWC")
@@ -83,7 +83,7 @@ def create_conv_layer(name, input_tensor, in_channels, out_channels, is_training
 		s = s + add
 
 	if batchnorm:
-		print(f">>> batchnorm: {name}")
+		#print(f">>> batchnorm: {name}")
 		#n = batch_norm(s, decay = 0.99, center=True, scale=True, updates_collections=None, is_training=is_training, epsilon=0.01)
 		# fused = False
 		#n = batch_norm(s, decay = 0.99, center=True, scale=True, updates_collections=None, is_training=is_training, scope = name, fused = False)
