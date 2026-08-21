@@ -100,9 +100,10 @@ class TrainingFramework():
 						t_other = 0
 
 					loss = 0
-					lastprogress = progress 
+					lastprogress = progress
 
-				self.saveModel(step)
+				#print(f"progress={progress:.2f}")
+				self.saveModel(step, progress)
 				self.visualization(step, result, batch)
 				
 				for i in range(len(lr_decay_step)):
