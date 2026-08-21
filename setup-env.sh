@@ -19,6 +19,9 @@ if [ "$(id -u)" -ne 0 ]; then
     apt install -y build-essential libssl-dev zlib1g-dev \
                    libbz2-dev libsqlite3-dev libffi-dev tk-dev
 
+    sudo apt update && \
+    sudo apt install -y libblas-dev liblapack-dev gfortran
+
 fi
 
 
@@ -28,6 +31,15 @@ fi
 #    3. pyenv
 #    4. venv
 #    5. miniconda
+
+
+
+# docker: best image - 20.12-tf1-py3
+#         tf1.15.2, CUDA 11.1.0, py3.8.5
+# ref: https://docs.nvidia.com/deeplearning/frameworks/support-matrix/index.html
+docker pull nvcr.io/nvidia/tensorflow:20.12-tf1-py3
+#docker run -it  --gpus all --ipc=host --name ngc-tf115-cuda111 --hostname ngc-tf115-cuda111 --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 -v $(pwd):/app -w /app nvcr.io/nvidia/tensorflow:20.12-tf1-py3 bash
+# still need to install: pip3: imageio, tflearn==0.5.0, Pillow==8.4.0, 
 
 
 
@@ -68,6 +80,7 @@ pip3 install tensorflow-gpu==1.15.0
 #pip3 install tensorflow-gpu==1.13.1    # testing
 
 pip3 install scipy==1.1.0
+pip3 install imageio
 
 pip3 install "Pillow==8.4.0"
 #pip3 install "Pillow==9.5.0"
@@ -85,6 +98,14 @@ pip3 install tensorboard==1.15.0
 pip3 install nvidia-cusolver-cu11	# solves some in-container libcuda* issues
 
 pip3 install mapbox
+
+# NOTE: skimage is a requirement for inferencing to generate graphs,
+#       but skimage is not available via pip3 / python > 3.8
+#       and installing scikit-image will replace numpy, scipy and pillow
+pip3 install scikit-image==0.17.2       # tested aug 17 ok
+
+#tested install scikit-image, then reinstall numpy==1.18.5 and scipy==1.1.0, Pillow8.4.0
+# but it breaks other things ...
 
 
 # if tflearn is needed:
