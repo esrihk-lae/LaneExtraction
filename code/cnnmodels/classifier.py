@@ -32,69 +32,21 @@ def fully_conneted(x, units, use_bias=True, scope='fully_0'):
 
 		return x
 
-def resnet18classifier(x, is_training, ch_in = 3, ch_out = 2, ch = 64, embedding_output = False, feature3_output = False):
-	x, _, _ = common.create_conv_layer('enc_1', x, ch_in, ch, kx = 7, ky = 7, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm = False, activation = "linear")
+def resnet18classifier(x, is_training, ch_in=3, ch_out=2, ch=64, embedding_output=False, feature3_output=False):
+	x, _, _ = common.create_conv_layer('enc_1', x, ch_in, ch, kx=7, ky=7, stride_x=2, stride_y=2, is_training=is_training, batchnorm=False, activation="linear")
 	x1 = x
-	features = resnet_template(x, is_training = is_training, res_n = 18, ch = ch)
+	features = resnet_template(x, is_training=is_training, res_n=18, ch=ch)
 	features = [features[i] for i in range(len(features))]
 	enc_dim = [ch, ch*2, ch*4, ch*8]
 	# 4x 8x 16x 32x
 
-	g,_,_ = common.create_conv_layer('mid_1', features[3], enc_dim[3], enc_dim[3], kx = 3, ky = 3, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm = True)
-	g,_,_ = common.create_conv_layer('mid_2', g, enc_dim[3], enc_dim[3], kx = 3, ky = 3, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm = True)
+	g,_,_ = common.create_conv_layer('mid_1', features[3], enc_dim[3], enc_dim[3], kx=3, ky=3, stride_x=2, stride_y=2, is_training=is_training, batchnorm=True)
+	g,_,_ = common.create_conv_layer('mid_2', g, enc_dim[3], enc_dim[3], kx=3, ky=3, stride_x=2, stride_y=2, is_training=is_training, batchnorm=True)
 
-	g = tf.reduce_mean(g, axis = [1,2])
-
-	f = g
-	f = fully_conneted(f, ch * 8, scope = "fc1")
-	f = tf.nn.relu(f)
-
-	if embedding_output:
-		if feature3_output:
-			return f, features[3]
-		else:
-			return f
-
-	return fully_conneted(f, ch_out, scope = "fc2")
-
-def resnet34classifier(x, is_training, ch_in = 3, ch_out = 2, ch = 64, embedding_output = False, feature3_output = False):
-	x, _, _ = common.create_conv_layer('enc_1', x, ch_in, ch, kx = 7, ky = 7, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm = False, activation = "linear")
-	x1 = x
-	features = resnet_template(x, is_training = is_training, res_n = 34, ch = ch)
-	features = [features[i] for i in range(len(features))]
-	enc_dim = [ch, ch*2, ch*4, ch*8]
-	# 4x 8x 16x 32x
-
-	g,_,_ = common.create_conv_layer('mid_1', features[3], enc_dim[3], enc_dim[3], kx = 3, ky = 3, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm = True)
-	g,_,_ = common.create_conv_layer('mid_2', g, enc_dim[3], enc_dim[3], kx = 3, ky = 3, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm = True)
-	g = tf.reduce_mean(g, axis = [1,2])
+	g = tf.reduce_mean(g, axis=[1,2])
 
 	f = g
-	f = fully_conneted(f, ch * 8, scope = "fc1")
-	f = tf.nn.relu(f)
-
-	if embedding_output:
-		if feature3_output:
-			return f, features[3]
-		else:
-			return f
-
-	return fully_conneted(f, ch_out, scope = "fc2")
-
-def resnet50classifier(x, is_training, ch_in = 3, ch_out = 2, ch = 64, embedding_output = False, feature3_output = False):
-	x, _, _ = common.create_conv_layer('enc_1', x, ch_in, ch, kx = 7, ky = 7, stride_x = 2, stride_y = 2, is_training=is_training, batchnorm=False, activation = "linear")
-	x1 = x
-	features = resnet_template(x, is_training = is_training, res_n = 50, ch = ch)
-	features = [features[i] for i in range(len(features))]
-	enc_dim = [ch*4, ch*2*4, ch*4*4, ch*8*4]
-	# 4x 8x 16x 32x
-
-	g,_,_ = common.create_conv_layer('mid_1', features[3], enc_dim[3], enc_dim[3]//2, kx = 3, ky = 3, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm = True)
-	g,_,_ = common.create_conv_layer('mid_2', g, enc_dim[3]//2, enc_dim[3]//4, kx = 3, ky = 3, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm = True)
-	g = tf.reduce_mean(g, axis = [1,2])
-
-	f = g
-	f = fully_conneted(f, ch * 8, scope = "fc1")
+	f = fully_conneted(f, ch * 8, scope="fc1")
 	f = tf.nn.relu(f)
 
 	if embedding_output:
@@ -105,37 +57,85 @@ def resnet50classifier(x, is_training, ch_in = 3, ch_out = 2, ch = 64, embedding
 
 	return fully_conneted(f, ch_out, scope="fc2")
 
-def FCNclassifier(x, is_training, ch_in = 3, ch_out = 2, ch = 64, embedding_output=False):
-	x, _, _ = common.create_conv_layer('enc_1', x, ch_in, ch, kx = 7, ky = 7, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm=False)
+def resnet34classifier(x, is_training, ch_in=3, ch_out=2, ch=64, embedding_output=False, feature3_output=False):
+	x, _, _ = common.create_conv_layer('enc_1', x, ch_in, ch, kx=7, ky=7, stride_x=2, stride_y=2, is_training=is_training, batchnorm=False, activation="linear")
+	x1 = x
+	features = resnet_template(x, is_training=is_training, res_n=34, ch=ch)
+	features = [features[i] for i in range(len(features))]
+	enc_dim = [ch, ch*2, ch*4, ch*8]
+	# 4x 8x 16x 32x
 
-	x, _, _ = common.create_conv_layer('enc_2', x, ch, ch * 2, kx = 3, ky = 3, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm=True)
-	x, _, _ = common.create_conv_layer('enc_3', x, ch * 2, ch * 2, kx = 3, ky = 3, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm=True)
-
-	x, _, _ = common.create_conv_layer('enc_4', x, ch*2, ch * 4, kx = 3, ky = 3, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm=True)
-	x, _, _ = common.create_conv_layer('enc_5', x, ch*4, ch * 4, kx = 3, ky = 3, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm=True)
-
-	x, _, _ = common.create_conv_layer('enc_6', x, ch*4, ch * 8, kx = 3, ky = 3, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm=True)
-	x, _, _ = common.create_conv_layer('enc_7', x, ch*8, ch * 8, kx = 3, ky = 3, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm=True)
-
-	x, _, _ = common.create_conv_layer('enc_8', x, ch*8, ch * 8, kx = 3, ky = 3, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm=True)
-	x, _, _ = common.create_conv_layer('enc_9', x, ch*8, ch * 8, kx = 3, ky = 3, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm=True)
-
-	x, _, _ = common.create_conv_layer('enc_10', x, ch*8, ch * 8, kx = 3, ky = 3, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm=True)
-	x, _, _ = common.create_conv_layer('enc_11', x, ch*8, ch * 8, kx = 3, ky = 3, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm=True)
-
-	x, _, _ = common.create_conv_layer('enc_12', x, ch*8, ch * 8, kx = 3, ky = 3, stride_x = 1, stride_y = 1, is_training = is_training, batchnorm=True)
-	x, _, _ = common.create_conv_layer('enc_13', x, ch*8, ch * 8, kx = 3, ky = 3, stride_x = 2, stride_y = 2, is_training = is_training, batchnorm=True)
-
-	g = tf.math.reduce_mean(x, axis = [1,2])
+	g,_,_ = common.create_conv_layer('mid_1', features[3], enc_dim[3], enc_dim[3], kx=3, ky=3, stride_x=2, stride_y=2, is_training=is_training, batchnorm=True)
+	g,_,_ = common.create_conv_layer('mid_2', g, enc_dim[3], enc_dim[3], kx =3, ky=3, stride_x=2, stride_y=2, is_training=is_training, batchnorm=True)
+	g = tf.reduce_mean(g, axis=[1,2])
 
 	f = g
-	f = fully_conneted(f, ch * 8, scope = "fc1")
+	f = fully_conneted(f, ch * 8, scope="fc1")
+	f = tf.nn.relu(f)
+
+	if embedding_output:
+		if feature3_output:
+			return f, features[3]
+		else:
+			return f
+
+	return fully_conneted(f, ch_out, scope="fc2")
+
+def resnet50classifier(x, is_training, ch_in=3, ch_out=2, ch=64, embedding_output=False, feature3_output=False):
+	x, _, _ = common.create_conv_layer('enc_1', x, ch_in, ch, kx=7, ky=7, stride_x=2, stride_y=2, is_training=is_training, batchnorm=False, activation="linear")
+	x1 = x
+	features = resnet_template(x, is_training=is_training, res_n=50, ch=ch)
+	features = [features[i] for i in range(len(features))]
+	enc_dim = [ch*4, ch*2*4, ch*4*4, ch*8*4]
+	# 4x 8x 16x 32x
+
+	g,_,_ = common.create_conv_layer('mid_1', features[3], enc_dim[3], enc_dim[3]//2, kx=3, ky=3, stride_x=2, stride_y=2, is_training=is_training, batchnorm=True)
+	g,_,_ = common.create_conv_layer('mid_2', g, enc_dim[3]//2, enc_dim[3]//4, kx=3, ky=3, stride_x=2, stride_y=2, is_training=is_training, batchnorm=True)
+	g = tf.reduce_mean(g, axis=[1,2])
+
+	f = g
+	f = fully_conneted(f, ch * 8, scope="fc1")
+	f = tf.nn.relu(f)
+
+	if embedding_output:
+		if feature3_output:
+			return f, features[3]
+		else:
+			return f
+
+	return fully_conneted(f, ch_out, scope="fc2")
+
+def FCNclassifier(x, is_training, ch_in=3, ch_out=2, ch=64, embedding_output=False):
+	x, _, _ = common.create_conv_layer('enc_1', x, ch_in, ch, kx=7, ky=7, stride_x=2, stride_y=2, is_training=is_training, batchnorm=False)
+
+	x, _, _ = common.create_conv_layer('enc_2', x, ch, ch * 2, kx=3, ky=3, stride_x=1, stride_y=1, is_training=is_training, batchnorm=True)
+	x, _, _ = common.create_conv_layer('enc_3', x, ch * 2, ch * 2, kx=3, ky=3, stride_x=2, stride_y=2, is_training=is_training, batchnorm=True)
+
+	x, _, _ = common.create_conv_layer('enc_4', x, ch*2, ch * 4, kx=3, ky=3, stride_x=1, stride_y=1, is_training=is_training, batchnorm=True)
+	x, _, _ = common.create_conv_layer('enc_5', x, ch*4, ch * 4, kx=3, ky=3, stride_x=2, stride_y=2, is_training=is_training, batchnorm=True)
+
+	x, _, _ = common.create_conv_layer('enc_6', x, ch*4, ch * 8, kx=3, ky=3, stride_x=1, stride_y=1, is_training=is_training, batchnorm=True)
+	x, _, _ = common.create_conv_layer('enc_7', x, ch*8, ch * 8, kx=3, ky=3, stride_x=2, stride_y=2, is_training=is_training, batchnorm=True)
+
+	x, _, _ = common.create_conv_layer('enc_8', x, ch*8, ch * 8, kx=3, ky=3, stride_x=1, stride_y=1, is_training=is_training, batchnorm=True)
+	x, _, _ = common.create_conv_layer('enc_9', x, ch*8, ch * 8, kx=3, ky=3, stride_x=2, stride_y=2, is_training=is_training, batchnorm=True)
+
+	x, _, _ = common.create_conv_layer('enc_10', x, ch*8, ch * 8, kx=3, ky=3, stride_x=1, stride_y=1, is_training =is_training, batchnorm=True)
+	x, _, _ = common.create_conv_layer('enc_11', x, ch*8, ch * 8, kx=3, ky=3, stride_x=2, stride_y=2, is_training =is_training, batchnorm=True)
+
+	x, _, _ = common.create_conv_layer('enc_12', x, ch*8, ch * 8, kx=3, ky=3, stride_x=1, stride_y=1, is_training =is_training, batchnorm=True)
+	x, _, _ = common.create_conv_layer('enc_13', x, ch*8, ch * 8, kx=3, ky=3, stride_x=2, stride_y=2, is_training =is_training, batchnorm=True)
+
+	g = tf.math.reduce_mean(x, axis=[1,2])
+
+	f = g
+	f = fully_conneted(f, ch * 8, scope="fc1")
 	f = tf.nn.relu(f)
 
 	if embedding_output:
 		return f
 
-	return fully_conneted(f, ch_out, scope = "fc2")
+	return fully_conneted(f, ch_out, scope="fc2")
 
 
 def get_residual_layer(res_n) :
@@ -159,8 +159,8 @@ def get_residual_layer(res_n) :
 	return x
 
 
-def resnet_template(x, is_training=True, reuse=False, res_n = 18, ch = 64, feature_activation=tf.nn.relu):
-	with tf.variable_scope("resnet", reuse=reuse):
+def resnet_template(x, is_training=True, reuse=False, res_n=18, ch=64, feature_activation=tf.nn.relu):
+	with tf.compat.v1.variable_scope("resnet", reuse=reuse):
 
 		residual_block = resblock
 		if res_n < 50 :
