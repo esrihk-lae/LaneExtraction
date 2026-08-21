@@ -68,7 +68,7 @@ class Dataloader():
 			while True:
 				ind = random.choice(self.indrange)# if ind is None else ind
 
-				#links = json.load(open(self.folder+"/link%s.json" % ind))
+				#links_test = json.load(open(self.folder+"/link%s.json" % ind))
 				with open(f"{self.folder}/link{ind}.json") as f:
 					links = json.load(f)
 
@@ -374,7 +374,6 @@ class Dataloader():
 
 				break
 
-		#print(f">>> getting batch done")
 		return self.image_batch[:batchsize, :,:,:], self.connector_batch[:batchsize,:,:,:], self.target_batch[:batchsize, :,:,:], self.target_label_batch[:batchsize,:], self.normal_batch[:batchsize,:,:,:]
 
 	def getBatch(self, batchsize):
@@ -385,7 +384,7 @@ class Dataloader():
 
 
 class ParallelDataLoader():
-	def __init__(self, *args,**kwargs):
+	def __init__(self, *args, **kwargs):
 		self.n = 4
 		self.subloader = []
 		self.subloaderReadyEvent = []
@@ -393,7 +392,7 @@ class ParallelDataLoader():
 		self.current_loader_id = 0
 
 		for i in range(self.n):
-			self.subloader.append(Dataloader(*args,**kwargs))
+			self.subloader.append(Dataloader(*args, **kwargs))
 			self.subloaderReadyEvent.append(threading.Event())
 			self.subloaderWaitEvent.append(threading.Event())
 
@@ -404,8 +403,6 @@ class ParallelDataLoader():
 		for i in range(self.n):
 			x = threading.Thread(target=self.daemon, args=(i,))
 			x.start()
-
-		print(f">>> ParallelDataLoader() done")
 
 
 	def daemon(self, tid):
