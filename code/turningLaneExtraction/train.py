@@ -1,5 +1,6 @@
 from datetime import datetime
 import math
+from decimal import Decimal
 import json
 import os
 import sys
@@ -18,7 +19,7 @@ from model import LinkModel
 
 
 class Train(TrainingFramework):
-	def __init__(self, mode = "seg"):
+	def __init__(self, mode="seg"):
 		self.mode = mode
 		self.image_size = 640
 		self.batch_size = 4		# dky - original: 8
@@ -30,16 +31,12 @@ class Train(TrainingFramework):
 			for i in range(9):
 				self.training_range.append("_%d" % (tid*9+i))
 	
-		self.instance = "_turningLaneExtraction_640_resnet34_poscodev3_v0" + self.mode
+		self.instance = f"_turningLaneExtraction_{self.image_size}_resnet34_{mode}-{timestamp}"
 		
-		self.modelfolder = "model" + self.instance
-		self.validationfolder = "validation" + self.instance
+		self.modelfolder = f"model{self.instance}"
+		self.validationfolder = f"validation{self.instance}"
 
-		
-		#Popen("mkdir -p " + self.modelfolder, shell=True).wait()	# dky: orig
 		os.makedirs(self.modelfolder, exist_ok=True)
-
-		#Popen("mkdir -p " + self.validationfolder, shell=True).wait()	# dky: orig
 		os.makedirs(self.validationfolder, exist_ok=True)
 
 		self.counter = 0
@@ -87,20 +84,26 @@ class Train(TrainingFramework):
 		return step / float(self.epochsize)
 
 	def saveModel(self, step, progress=None):
+		save_every_epochs = 50
+		save_every_steps = 1000
+
 		cur_epoch = int(progress)
 		cur_epoch_actual = round(progress, 2)
 
-		epochsize_actual = int(self.epochsize)
-		epochsize_actual_rounded = round(int(self.epochsize), -2)
+		end_epoch = int(self.epochsize)
+		end_epoch_actual = round(self.epochsize, 2)
 
-		#print(f">>> step {step} epoch {cur_epoch_actual}: checksum={cur_epoch_actual % 2.0}")
+		save_epoch = (cur_epoch_actual * 100) % save_every_epochs		# dky: avoid floating point ops precision issues
+
+		#print(f">>> progress={progress}, save_epoch={save_epoch} (cur_epoch_actual={cur_epoch_actual})")
+		#print(f"step: {step} cur_epoch={cur_epoch}: save-epoch={cur_epoch % save_every_epochs}, save_every_epoch: {save_every_epochs} / cur_epoch={cur_epoch} / end_epoch={end_epoch}")
+		#print(f"step {step} epoch:{cur_epoch_actual} ({cur_epoch}), checkpoint={saved_checkpoint} save-epoch={cur_epoch % save_every_epochs} / total epochs={end_epoch}")
 
 		#if step > 0 and step % (self.epochsize * 5) == 0:
-		# dky TODO: cover end case:
-		# if step > 0 and (step % 1000 == 0 or cur_epoch == epochsize_actual):
-		if step > 0 and step % 1000 == 0:
-			save_path = os.path.join(self.modelfolder, f"model{step}")
-			self.model.saveModel(save_path)
+		if step > 500 and cur_epoch > 0 and (save_epoch == 0 or cur_epoch >= end_epoch):
+			save_path = os.path.join(self.modelfolder, f"model{cur_epoch}")
+			if not os.path.isfile(save_path):
+				self.model.saveModel(save_path)
 
 		return False	# do not stop training
 
@@ -116,7 +119,6 @@ class Train(TrainingFramework):
 				
 				Image.fromarray(((batch[2][i,:,:,0]) * 255).astype(np.uint8)).save(self.validationfolder + "/target%d.jpg" % (ind+i))
 				Image.fromarray(((result[1][i,:,:,0]) * 255).astype(np.uint8)).save(self.validationfolder + "/output%d.jpg" % (ind+i))
-					
 
 				def norm(x):
 					#return x
@@ -158,5 +160,6 @@ if __name__ == "__main__":
 	config["step_max"] = epochsisze * 400 + 1
 	config["use_validation"] = False
 	#config["logfile"] = "log_%s.json" % trainer.instance
-	config["logfile"] = f"log_{trainer.instance}-{timestamp}.json"
+	config["logfile"] = f"log_{trainer.instance}.json"
+	
 	trainer.run(config)
