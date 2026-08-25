@@ -54,7 +54,6 @@ vis_switch_no_link = False
 
 
 
-
 if len(sys.argv) > 2:
 	annotation = sys.argv[2]
 else:
@@ -116,15 +115,6 @@ activeLinks = []
 editingMode = "ready_to_draw"
 
 zoom = 1
-
-
-
-
-
-
-
-
-
 
 
 def mouseEventHandler(event,x,y,flags,param):
@@ -245,7 +235,7 @@ def mouseEventHandler(event,x,y,flags,param):
 					seg = np.zeros_like(sat)
 					direction = np.zeros_like(sat) + 127
 					connector = np.zeros_like(sat)
-					
+
 					# 
 					for nid, nei in laneMap.neighbors.items():
 						x1 = laneMap.nodes[nid][0] + margin_for_cnn - margin - (mc-cnnsize//2)
@@ -285,7 +275,7 @@ def mouseEventHandler(event,x,y,flags,param):
 					data["p2"] = [c2 - (mc-cnnsize//2), r2 - (mr-cnnsize//2)]
 					data["img_in"] = "../hdmapeditor/tmp"
 
-					r = requests.post('http://localhost:8080/',data = json.dumps(data))
+					r = requests.post('http://localhost:8080/', data=json.dumps(data))
 					ret = json.loads(r.text)
 					print(ret)
 					if ret["success"] == "success":
@@ -346,7 +336,6 @@ def mouseEventHandler(event,x,y,flags,param):
 
 			editingMode = "autofill_stage1"
 
-				
 		elif editingMode == "erase":
 			rmlist = []
 			for nid, loc in laneMap.nodes.items():
@@ -357,13 +346,10 @@ def mouseEventHandler(event,x,y,flags,param):
 			for nid in rmlist:
 				laneMap.deleteNode(nid)
 
-
 		pickle.dump(laneMaps, open(annotation, "wb"))
 
 	if editingMode == "editing" :
 		laneMap.nodes[lastNodeID] = [global_x, global_y]
-		
-
 
 	redraw()
 
@@ -380,7 +366,7 @@ def dashline(img, p1,p2,color,width,linetype):
 		x2 = int(p1[0] * (1-a2) + p2[0] * a2)
 		y2 = int(p1[1] * (1-a2) + p2[1] * a2)
 
-		cv2.line(img, (x1,y1), (x2,y2), color,width,linetype)
+		cv2.line(img, (x1,y1), (x2,y2), color, width, linetype)
 
 		
 
@@ -481,7 +467,6 @@ def redraw(noshow=False, transpose = False):
 				
 				if vis_switch_no_way and laneMap.edgeType[(nid,nn)] == "way":
 					continue
-			
 
 
 				scale = 6
@@ -536,9 +521,6 @@ def redraw(noshow=False, transpose = False):
 								if not vis_switch_no_arrow : cv2.line(frame, (mx + int(dx * scale),my+int(dy * scale)), (mx + int(dy * scale),my-int(dx * scale)), color,2)
 							cv2.line(frame, (x1,y1), (x2,y2), color,2,cv2.LINE_AA)
 
-
-	# 
-		
 	#if LITE_RENDER == False:
 	if vis_switch_no_vertices == False:
 		for nid, p in laneMap.nodes.items():
@@ -548,7 +530,6 @@ def redraw(noshow=False, transpose = False):
 			if laneMap.nodeType[nid] == "way" and vis_switch_no_way == False:
 				cv2.circle(frame, (x1,y1),4,(0,0,0),-1)
 				#cv2.circle(frame, (x1,y1),3,(0,0,255),-1)
-				
 			elif laneMap.nodeType[nid] == "link" and vis_switch_no_link == False:
 				cv2.circle(frame, (x1,y1),3,(255,0,0),-1)
 
@@ -597,12 +578,11 @@ def redraw(noshow=False, transpose = False):
 		x3 = mousex
 		y3 = mousey 
 
-		cv2.line(frame, (x1,y1), (x2,y2), (255,255,0),2,cv2.LINE_AA)
-		cv2.line(frame, (x1,y1), (x3,y3), (255,255,0),1,cv2.LINE_AA)
-		cv2.line(frame, (x2,y2), (x3,y3), (255,255,0),1,cv2.LINE_AA)
+		cv2.line(frame, (x1,y1), (x2,y2), (255,255,0), 2, cv2.LINE_AA)
+		cv2.line(frame, (x1,y1), (x3,y3), (255,255,0), 1, cv2.LINE_AA)
+		cv2.line(frame, (x2,y2), (x3,y3), (255,255,0), 1, cv2.LINE_AA)
 
 		# Bezier curver
-
 		L = np.sqrt((x1-x2)**2 + (y1-y2)**2)
 		N = int(L / 20)+1
 		def interpolate(p1,p2,a):
@@ -611,7 +591,7 @@ def redraw(noshow=False, transpose = False):
 		prev_loc = (x1,y1)
 		for i in range(N):
 			alpha = float(i+1) / N 
-			loc = interpolate(interpolate((x1,y1), (x3,y3), alpha),interpolate((x3,y3), (x2,y2), alpha),alpha) 
+			loc = interpolate(interpolate((x1,y1), (x3,y3), alpha), interpolate((x3,y3), (x2,y2), alpha),alpha) 
 
 			cv2.line(frame, (int(prev_loc[0]),int(prev_loc[1])), (int(loc[0]),int(loc[1])), (255,0,255),2,cv2.LINE_AA)
 			prev_loc = loc 
@@ -635,7 +615,7 @@ def redraw(noshow=False, transpose = False):
 			x2 = (laneMap.nodes[polygon[i+1]][0] - pos[0]) * zoom
 			y2 = (laneMap.nodes[polygon[i+1]][1] - pos[1]) * zoom
 			if noshow == False:
-				cv2.line(frame, (x1,y1), (x2,y2), (0,0,255),2,cv2.LINE_AA)
+				cv2.line(frame, (x1,y1), (x2,y2), (0,0,255), 2, cv2.LINE_AA)
 
 			polygon_list.append([x1,y1])
 		polygon_list.append([x2,y2])
@@ -652,7 +632,6 @@ def redraw(noshow=False, transpose = False):
 		for nn in nei:
 			color = (0,0,255)
 
-
 			x2 = (laneMap.nodes[nn][0] - pos[0]) * zoom
 			y2 = (laneMap.nodes[nn][1] - pos[1]) * zoom
 
@@ -662,14 +641,12 @@ def redraw(noshow=False, transpose = False):
 			dx /= l 
 			dy /= l
 			scale = 5
-
 			mx = (x1+x2) // 2
 			my = (y1+y2) // 2
-			if noshow == False:
-				cv2.line(mask, (mx + int(dx * scale),my+int(dy * scale)), (mx - int(dy * scale),my+int(dx * scale)), color,2)
-				cv2.line(mask, (mx + int(dx * scale),my+int(dy * scale)), (mx + int(dy * scale),my-int(dx * scale)), color,2)
-			
 
+			if noshow == False:
+				cv2.line(mask, (mx + int(dx * scale), my+int(dy * scale)), (mx - int(dy * scale), my+int(dx * scale)), color,2)
+				cv2.line(mask, (mx + int(dx * scale), my+int(dy * scale)), (mx + int(dy * scale), my-int(dx * scale)), color,2)
 				cv2.line(frame, (x1,y1), (x2,y2), color,2,cv2.LINE_AA)
 	
 	for nid, p in laneMap.nodes.items():
@@ -700,21 +677,22 @@ def redraw(noshow=False, transpose = False):
 		x2 = mousex
 		y2 = mousey 
 		if edgeType == "way":
-			cv2.line(mask, (x1,y1), (x2,y2), (0,255,0),2,cv2.LINE_AA)
+			cv2.line(mask, (x1,y1), (x2,y2), (0,255,0), 2, cv2.LINE_AA)
 		else:
-			cv2.line(mask, (x1,y1), (x2,y2), (255,0,0),2,cv2.LINE_AA)
+			cv2.line(mask, (x1,y1), (x2,y2), (255,0,0), 2, cv2.LINE_AA)
 
 	
 	frame = cv2.add(frame, mask)
 	lastNodeID = currentLastNodeID
 
 	# copy to minimap
-	crop = cv2.resize(frame, (int(float(windowsize[0] // zoom) / imageDim[0] * 256), int(float(windowsize[1] // zoom) / imageDim[1] * 256) ), interpolation = cv2.INTER_LANCZOS4)
+	crop = cv2.resize(frame, (int(float(windowsize[0] // zoom) / imageDim[0] * 256), int(float(windowsize[1] // zoom) / imageDim[1] * 256)), interpolation=cv2.INTER_LANCZOS4)
 	r1 = int(float(pos[1]) / imageDim[0] * 256)
 	c1 = int(float(pos[0]) / imageDim[1] * 256)
 	r2 = r1 + np.shape(crop)[0]
 	c2 = c1 + np.shape(crop)[1]
-	minimap[r1:r2,c1:c2,:] = crop	
+	#print(f"minimap: {minimap.shape}, crop: {crop.shape}")
+	minimap[r1:r2, c1:c2, :] = crop	
 
 	# draw minimap
 	if vis_switch_no_minimap == False:
