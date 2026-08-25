@@ -23,7 +23,7 @@ def rotate(pos, angle, size):
 
 
 class Dataloader():
-	def __init__(self, folder, indrange, image_size = 640, datasetImageSize = 2048, preload_tiles = 4, testing = False):
+	def __init__(self, folder, indrange, image_size=640, datasetImageSize=2048, preload_tiles=4, testing=False):
 		self.folder = folder
 		self.indrange = indrange
 		self.image_size = image_size 
@@ -49,21 +49,20 @@ class Dataloader():
 		
 		self.testing = testing
 
-		self.poscode = np.zeros((image_size * 2, image_size * 2,2))
+		self.poscode = np.zeros((image_size * 2, image_size * 2, 2))
 		for i in range(image_size * 2):
 			self.poscode[i,:,0] = float(i) / image_size - 1.0
 			self.poscode[:,i,1] = float(i) / image_size - 1.0
-			
 
 
 	def preload(self, ind = None):
 		# global global_lock
-
 		# global_lock.acquire()
 		# for laneMap in self.laneMaps:
 		# 	laneMap.save(self.fgt_folder)
 		# self.laneMaps = []
 		# global_lock.release()
+
 		self.links = []
 		self.nid2links = []
 		self.pos2nid = []
@@ -104,9 +103,9 @@ class Dataloader():
 
 				angle = 0
 				if self.testing == False and random.randint(0,5) < 4:
-					angle = random.randint(0,3) * 90 + random.randint(-30,30)
+					angle = random.randint(0,3) * 90 + random.randint(-30, 30)
 					#angle = 10
-					print(f">>> dataloader.preload() angle: angle={angle}")
+					#print(f">>> dataloader.preload() angle: angle={angle}")
 
 					sat_img = scipy.ndimage.rotate(sat_img, angle, reshape=False)
 					mask = scipy.ndimage.rotate(mask, angle, reshape=False)
@@ -170,15 +169,20 @@ class Dataloader():
 				self.nid2links.append(nid2links)
 				self.pos2nid.append(pos2nid)
 
+				# dky: loop through every link in index j in links[2]
 				for j in range(len(links[2])):
+					# dky: check start point j(x0,y0) exists in pos2nid
 					if (links[2][j][0][0], links[2][j][0][1]) not in pos2nid:
-						print(j, 1, (links[2][j][0][0], links[2][j][0][1]))
-						print(pos2nid.keys())
+						#print(j, 1, (links[2][j][0][0], links[2][j][0][1]))	# dky: orig
+						print(f"{j} 1 {(links[2][j][0][0], links[2][j][0][1])}")	# dky: interpolate tuple
+						print(f"{j} 1 ({links[2][j][0][0]}, {links[2][j][0][1]})")	# dky: interpolate individual coordinate values
+						print(f"start: {pos2nid.keys()}")
 						exit()
-					
+
+					# dky: check end point j(x0,y0) exists in pos2nid
 					if (links[2][j][-1][0], links[2][j][-1][1]) not in pos2nid:
 						print(j, 2, (links[2][j][0][0], links[2][j][0][1]))
-						print(pos2nid.keys())
+						print(f"end: {pos2nid.keys()}")
 						exit()
 					
 
@@ -223,7 +227,7 @@ class Dataloader():
 		self.getBatchInternal(self.maxbatchsize)
 
 	def getBatchInternal(self, batchsize):
-		print(f"getting batch")
+		#print(f">>> getBatchInternal(): {batchsize}")
 
 		img = np.zeros((self.image_size, self.image_size), dtype=np.uint8)
 		connector1 = np.zeros((self.image_size, self.image_size), dtype=np.uint8)
@@ -242,7 +246,7 @@ class Dataloader():
 				coin = random.randint(0,1)
 
 				#2026-07 dky sanity check
-				# print(f"i:{i}, tile_id: {tile_id}, coin: {coin}")
+				# print(f"getBatchInternal(): i:{i}, tile_id: {tile_id}, coin: {coin}")
 				if coin == 0:
 					locallink = random.choice(locallinks)
 					vertices = locallink
@@ -326,8 +330,6 @@ class Dataloader():
 					by = random.randint(-8, 8)
 
 					self.image_batch[i,:,:,:] = self.images[tile_id, sr+bx:sr+bx+self.image_size, sc+by:sc+by+self.image_size, :]
-					
-					
 					#self.target_t_batch[i,:,:,0] = self.targets_t[tile_id, sr:sr+self.image_size, sc:sc+self.image_size, 0] 
 					self.normal_batch[i,:,:,:] = self.normal[tile_id, sr:sr+self.image_size, sc:sc+self.image_size, :]
 					
@@ -368,7 +370,7 @@ class Dataloader():
 
 				else:
 					nodes_key_list = list(nodes.keys())
-					#print(f"nodes: {type(nodes.keys())}, nodes_list: {nodes_key_list}")
+					#print(f">>> getBatchInternal(): nodes: {type(nodes.keys())}, nodes_list: {nodes_key_list}")
 
 					# 2026-07 dky - nodes.keys() is not subscriptable:
 					# nid1 = random.choice(nodes.keys())
@@ -492,39 +494,39 @@ class Dataloader():
 
 
 class ParallelDataLoader():
-	def __init__(self, *args,**kwargs):
+	def __init__(self, *args, **kwargs):
 		self.n = 4
 		self.subloader = []
 		self.subloaderReadyEvent = []
 		self.subloaderWaitEvent = []
-		
-		self.current_loader_id = 0 
+		self.current_loader_id = 0
+		self.stop_event = threading.Event()
+		self.threads = []
 
 
 		for i in range(self.n):
-			self.subloader.append(Dataloader(*args,**kwargs))
+			self.subloader.append(Dataloader(*args, **kwargs))
 			self.subloaderReadyEvent.append(threading.Event())
 			self.subloaderWaitEvent.append(threading.Event())
 
 		for i in range(self.n):
 			self.subloaderReadyEvent[i].clear()
 			self.subloaderWaitEvent[i].clear()
+
 		for i in range(self.n):
 			x = threading.Thread(target=self.daemon, args=(i,))
-			x.start() 
+			x.start()
+			self.threads.append(x)
 
 
 	def daemon(self, tid):
 		c = 0
-
-		while True:
-			# 
+		while not self.stop_event.is_set():
 			t0 = time()
 			print("thread-%d starts preloading" % tid)
 			self.subloader[tid].preload(None)
 			
 			self.subloaderReadyEvent[tid].set()
-
 			print("thread-%d finished preloading (time = %.2f)" % (tid, time()-t0))
 
 			self.subloaderWaitEvent[tid].wait()
@@ -535,6 +537,13 @@ class ParallelDataLoader():
 				self.subloaderWaitEvent[tid].clear()
 			
 			c = c + 1
+
+	def stop(self):
+		self.stop_event.set()
+		for event in self.subloaderWaitEvent:
+			event.set()
+		for t in self.threads:
+			t.join()
 
 
 	def preload(self):
