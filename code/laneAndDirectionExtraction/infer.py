@@ -1,7 +1,7 @@
 import sys
 
 from PIL import Image
-import imageio.v2 as imageio
+import imageio.v3 as imageio
 import numpy as np
 from subprocess import Popen
 import tensorflow as tf
@@ -27,9 +27,12 @@ Popen("mkdir -p " + outputfolder, shell=True).wait()
 
 #img = scipy.ndimage.imread(inputfile)				# dky: orig
 img = imageio.imread(inputfile, mode='RGB')			# dky: change to imageio, read as RGB?
+#img = imageio.imread(inputfile)			# dky: change to imageio v3, read as RGB?
 
 #sdmap = scipy.ndimage.imread(inputfile.replace("sat", "sdmap"))
 sdmap = imageio.imread(inputfile.replace("sat", "sdmap"), mode='L')		# dky: change to imageio; sdmap test read as mode L
+#sdmap = imageio.imread(inputfile.replace("sat", "sdmap"))		# dky: change to imageio v3; sdmap test read as mode L
+
 # dky TODO: need to figure out what sdmap is to align read mode -- what color mode is this?
 
 #img = (img.astype(np.float) / 255.0 - 0.5) * 0.81 		# dky: test update for np.float -> float
