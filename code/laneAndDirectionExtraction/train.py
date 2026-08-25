@@ -5,6 +5,7 @@ sys.path.append(os.path.dirname(sys.path[0]))
 sys.path.append("../cnnmodels")
 import json
 import math
+from decimal import Decimal
 
 from PIL import Image			# pyright: ignore[reportMissingImports]
 import numpy as np  			# pyright: ignore[reportMissingImports]
@@ -88,30 +89,27 @@ class Train(TrainingFramework):
 		return step / float(self.epochsize)
 
 
-	def saveModel(self, step):
-		save_every_epochs = 5
-		save_every_steps = 500
+	def saveModel(self, step, progress=None):
+		save_every_epochs = 10
+		save_every_steps = 1000
 
-		epoch = step // self.epochsize
-		is_epoch_end = (epoch > 0) and (step % self.epochsize == 0)
-		is_interval_epoch = (epoch > 0) and (epoch % save_every_epochs == 0)
+		cur_epoch = int(progress)
+		cur_epoch_actual = round(progress, 2)
 
-		#print(f">>> epoch={epoch}, is_epoch_end={is_epoch_end}, is_interval_epoch={is_interval_epoch}")
+		end_epoch = int(self.epochsize)
 
-		#if step > 0:	# dky: just save it
+		#is_epoch_end = (epoch > 0) and (step % self.epochsize == 0)
+		#is_interval_epoch = (epoch > 0) and (epoch % save_every_epochs == 0)
+
 		#if step % (self.epochsize * 10) == 0:	# dky: original from author
-		#if step > 0 and is epoch_end and (is_interval_epoch or ):
-		#if step > 0 and (step % save_every_steps ==0 or is_epoch_end):     # save at stepcount
-
-		if step > 0 and (step % save_every_steps == 0 or is_epoch_end):
+		if step > 0 and cur_epoch > 0 and (step % save_every_epochs == 0 or cur_epoch == end_epoch):
 			print(f" >>> in saveModel(): step={step}, epochsize={self.epochsize}, step//epochsize={step // self.epochsize} (saving) ***")
 			#self.model.saveModel(self.modelfolder + "/model%d" % (step // (self.epochsize)))	# dky: old school, not f-strings
-			self.model.saveModel(f"{self.modelfolder}/model{step // self.epochsize}")
-		# else:
-		# 	# dky: to confirm the save bug
-		# 	print(f" >>> in saveModel(): step={step}, epochsize={self.epochsize}, step//epochsize={step // self.epochsize} mod=({step % (self.epochsize * 10)}) (not saving)")
+			save_path = os.path.join(self.modelfolder, f"model{cur_epoch}")
+			if not os.path.isfile(save_path):
+				self.model.saveModel(save_path)
 
-		return False
+		return False		# do not stop training
 
 	def visualization(self, step, result=None, batch=None):
 		direction_img = np.zeros((self.image_size, self.image_size, 3))
