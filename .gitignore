@@ -21,6 +21,8 @@ model*.meta
 model*.data*
 dataset/*.p
 dataset/*.jpg
+code/*/log_*
+code/turning*/validation*/label*
 code/*/*.jpg
 code/*/**/ways.json
 code/*/**/*.jpg
