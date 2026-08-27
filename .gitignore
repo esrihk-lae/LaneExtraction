@@ -19,8 +19,11 @@ checkpoint
 model*.index
 model*.meta
 model*.data*
-dataset/*.p
-dataset/*.jpg
+dataset*/*.p
+dataset*/*.jpg
+dataset*/*.png
+dataset*/*.tif
+dataset*/output
 code/*/log_*
 code/turning*/validation*/label*
 code/*/*.jpg
