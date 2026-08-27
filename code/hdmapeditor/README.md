@@ -19,13 +19,13 @@ python3 main.py ../../dataset/sat_0.jpg
 
 **'e'** switch between 'editing' mode and 'drawing' mode.
 
-**'q'** switch the operation target between 'link' and 'way'. Here, ways correspond to the lanes at non-intersection area, and links correspond to the turning lanes at intersections. 
+**'q'** switch the operation target between 'link' and 'way'. Here, ways correspond to the lanes at non-intersection area, and links correspond to the turning lanes at intersections.
 
 **'x'** toggle 'delete' mode.
 
 **'r'** switch between 'drawing' mode and 'erase' mode. CAUTION: we don't support 'undo' for erase and delete modes yet.
 
-**'4,5,6'** change the size of the 'eraser'. 
+**'4,5,6'** change the size of the 'eraser'.
 
 **'z'** undo.
 
@@ -41,11 +41,11 @@ python3 main.py ../../dataset/sat_0.jpg
 
 **Create a regular lane:** Make sure the editor is in 'ready_to_draw | way | Layer 0' status. Click on a sequence of locations to draw a polyline. Double click the last node to stop drawing.
 
-**Create a turning lane:** Make sure the editor is in 'ready_to_draw | link | Layer 0' status. Click on a terminal node at the intersection. Draw a polyline for the turning lane. Click another terminal node to stop drawing. 
+**Create a turning lane:** Make sure the editor is in 'ready_to_draw | link | Layer 0' status. Click on a terminal node at the intersection. Draw a polyline for the turning lane. Click another terminal node to stop drawing.
 
 **Editing a node:** Switch to 'edit' mode. Click a node, and place the node at a new location by clicking it again.
 
-**Deleting a node:** Switch to 'delete' mode. Click a node twice to delete. 
+**Deleting a node:** Switch to 'delete' mode. Click a node twice to delete.
 
 
 

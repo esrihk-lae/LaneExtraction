@@ -1,9 +1,9 @@
 import json
-import sys 
+import sys
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
-import numpy as np 
+import numpy as np
 
 log = json.load(open(sys.argv[1]))
 
@@ -21,7 +21,7 @@ y_sorted = sorted(y)
 y_min = y_sorted[0]
 y_max = y_sorted[int(len(y) * 0.98)]
 
-r = y_max - y_min 
+r = y_max - y_min
 y_max += r * 0.1
 y_min -= r * 0.1
 
@@ -38,4 +38,4 @@ plt.ylim([y_min, y_max])
 plt.grid(True)
 fig.tight_layout()
 
-plt.savefig(sys.argv[2]) 
+plt.savefig(sys.argv[2])

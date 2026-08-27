@@ -1,4 +1,4 @@
-from time import time 
+from time import time
 #import sys
 import json
 import tensorflow as tf  # pyright: ignore[reportMissingModuleSource]
@@ -21,9 +21,9 @@ class TrainingFramework():
 			logfile = "log.json"
 
 		use_validation = config["use_validation"]
-		
+
 		self.kv = {}
-		
+
 		logs = {}
 
 		def addlog(k,v,s):
@@ -32,7 +32,7 @@ class TrainingFramework():
 				logs[k][1].append(v)
 			else:
 				logs[k] = [[s],[v]]
-				
+
 
 		gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
 		with tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options)) as sess:
@@ -44,7 +44,7 @@ class TrainingFramework():
 			loss = 0
 			t_load = 0
 			t_preload = 0
-			t_train = 0 
+			t_train = 0
 			t_other = 0
 			t0 = time()
 
@@ -60,7 +60,7 @@ class TrainingFramework():
 				self.preload(dataloader, step)
 				t3 = time()
 
-				t_load += t1-t0 
+				t_load += t1-t0
 				t_train += t2-t1
 				t_preload += t3-t2
 
@@ -84,7 +84,7 @@ class TrainingFramework():
 
 					# dky: replaced with modern python below
 					#sys.stdout.write("\rstep %d epoch:%.2f "% (step, progress) + ">" * p + "-" * (51-p) + " loss %f time %f %f %f %f " % (loss, t_preload, t_load, t_train, t_other - t_preload - t_load - t_train) + s )
-					#sys.stdout.flush()	
+					#sys.stdout.flush()
 
 					bar = ">" * p + "-" * (51 - p)
 					t_rem = t_other - t_preload - t_load - t_train
@@ -96,7 +96,7 @@ class TrainingFramework():
 						last_step = step
 						t_load = 0
 						t_preload = 0
-						t_train = 0 
+						t_train = 0
 						t_other = 0
 
 					loss = 0
@@ -105,14 +105,14 @@ class TrainingFramework():
 				#print(f"progress={progress:.2f}")
 				self.saveModel(step, progress)
 				self.visualization(step, result, batch)
-				
+
 				for i in range(len(lr_decay_step)):
 					if step == lr_decay_step[i]:
 						lr = lr * lr_decay[i]
 
 				if step == maxstep + 1:
 					break
-				
+
 				if step % 1000 == 0 and step > 0:
 					json.dump(logs, open(logfile, "w"), indent=2)
 
@@ -125,8 +125,8 @@ class TrainingFramework():
 			self.kv[k][1] = self.kv[k][1] + 1
 		else:
 			self.kv[k] = [v, 1]
-		
-		
+
+
 
 	# virtual methods
 	def createDataloader(self, mode):
@@ -163,4 +163,3 @@ class TrainingFramework():
 	def visualization(self, step, result = None, batch = None):
 		return False
 
-	

@@ -1,6 +1,6 @@
 from math import sqrt
 import os
-import sys 
+import sys
 sys.path.append(os.path.dirname(sys.path[0]))
 
 import skimage.morphology
@@ -54,7 +54,7 @@ def segtograph(in_fname, threshold, isolated_thr = 32, spur_thr = 0, deadend_thr
     if type(in_fname) == str :
         im = scipy.ndimage.imread(in_fname)
     else:
-        im = in_fname 
+        im = in_fname
 
     if len(im.shape) == 3:
         print(f"warning: bad shape {im.shape}, using first channel only")
@@ -67,7 +67,7 @@ def segtograph(in_fname, threshold, isolated_thr = 32, spur_thr = 0, deadend_thr
     im = scipy.ndimage.grey_closing(im, size=(6,6))
     #Image.fromarray(im).save("seg2graphdebugstep2.png")
     im = im >= threshold
-    
+
     im = skimage.morphology.thin(im)
     im = im.astype('uint8')
 
@@ -149,7 +149,7 @@ def segtograph(in_fname, threshold, isolated_thr = 32, spur_thr = 0, deadend_thr
 
         nk1 = (vertex[edge[0]][1],vertex[edge[0]][0])
         nk2 = (vertex[edge[1]][1],vertex[edge[1]][0])
-        
+
         if nk1 != nk2:
             if nk1 in neighbors:
                 if nk2 in neighbors[nk1]:
@@ -161,13 +161,13 @@ def segtograph(in_fname, threshold, isolated_thr = 32, spur_thr = 0, deadend_thr
 
             if  nk2 in neighbors:
                 if nk1 in neighbors[nk2]:
-                    pass 
+                    pass
                 else:
                     neighbors[nk2].append(nk1)
             else:
                 neighbors[nk2] = [nk1]
 
-            
+
     g = graph_refine(neighbors, isolated_thr = isolated_thr, spurs_thr = spur_thr)
     g = connectDeadEnds(g, thr = deadend_thr)
     #pickle.dump(g, open(out_fname, "w"))

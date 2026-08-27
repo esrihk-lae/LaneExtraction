@@ -200,7 +200,7 @@ for edge in edges:
 
 	nk1 = (vertex[edge[0]][1],vertex[edge[0]][0])
 	nk2 = (vertex[edge[1]][1],vertex[edge[1]][0])
-	
+
 	if nk1 != nk2:
 		if nk1 in neighbors:
 			if nk2 in neighbors[nk1]:
@@ -212,7 +212,7 @@ for edge in edges:
 
 		if  nk2 in neighbors:
 			if nk1 in neighbors[nk2]:
-				pass 
+				pass
 			else:
 				neighbors[nk2].append(nk1)
 		else:
@@ -252,6 +252,6 @@ for nloc, nei in g.items():
 		cv2.line(img, (x1,y1), (x2,y2), (127), 4)
 		cv2.circle(img, (x1,y1), 6, (0), -1)
 		cv2.circle(img, (x2,y2), 6, (0), -1)
-		
+
 
 cv2.imwrite(out_fname.replace(".p", "vis2.png"), img)

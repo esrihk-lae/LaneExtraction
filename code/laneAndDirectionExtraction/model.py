@@ -95,7 +95,7 @@ class LaneModel():
 			self.lr : lr,
 			self.is_training : True
 		}
-		
+
 		if self.hassdmap:
 			feed_dict[self.sdmap] = sdmap
 

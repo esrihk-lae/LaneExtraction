@@ -1,22 +1,22 @@
 # 25.812813, -80.202372
 
-import json 
-import math 
-from subprocess import Popen 
+import json
+import math
+from subprocess import Popen
 
-import os 
-import sys 
+import os
+import sys
 sys.path.append(os.path.dirname(sys.path[0]))
 
 #from satellite import mapbox as md
-from osm import osm 
-from PIL import Image 
-import numpy as np 
+from osm import osm
+from PIL import Image
+import numpy as np
 import scipy.misc
-import json 
+import json
 import cv2
 import pickle
-from roadstructure import LaneMap 
+from roadstructure import LaneMap
 
 def distance(p1, p2):
 	a = p1[0] - p2[0]
@@ -34,16 +34,16 @@ def waydistance_(way1, way2):
 			L = distance(p1,p2)
 			L = L / 3
 			for k in range(int(L)):
-				a = float(k) / L 
+				a = float(k) / L
 				p3 = [p1[0] * a + p2[0] * (1-a), p1[1] * a + p2[1] * (1-a)]
-				
+
 				d = distance(p0, p3)
 				min_d = min(min_d, d)
 
 			if min_d < 8*10:
 				break
 
-		
+
 		d1 = max(d1, min_d)
 	return d1
 
@@ -56,11 +56,11 @@ regions = json.load(open(sys.argv[1]))
 inputfolder = sys.argv[2]
 outputfolder = sys.argv[3]
 
-counter = 0 
+counter = 0
 counter_out = 0
-total_length = 0 
+total_length = 0
 c_road = 0
-c_oneway_road = 0 
+c_oneway_road = 0
 
 for region in regions:
 	min_lat, min_lon = region["lat"], region["lon"]
@@ -72,8 +72,8 @@ for region in regions:
 
 	blocks = [region["ilat"],region["ilon"]]
 	folder = inputfolder
-	
-	
+
+
 
 	for ilat in range(blocks[0]):
 		for ilon in range(blocks[1]):
@@ -84,17 +84,17 @@ for region in regions:
 			# 	labels = pickle.load(open(folder + "/sat_%d_label.p" % (counter), "rb"))
 			# except:
 			# 	break
-			# roadlabel, masklabel = labels 
+			# roadlabel, masklabel = labels
 
 			#osmmap = osm.OSMLoader(subregion,noUnderground=True, includeServiceRoad=False)
-			# TODO draw it 
-			
+			# TODO draw it
+
 			#polygons = masklabel.findAllPolygons()
 			# render masks, lanes, and normals (directions)
 			for sr in [0, 1024, 2048]:
 				for sc in [0, 1024, 2048]:
 					localways = json.load(open(outputfolder + "/way_%d.json" % (counter_out), "r"))
-					
+
 					distances = {}
 					for i in range(len(localways)):
 						#print(i, len(localways))
@@ -104,17 +104,17 @@ for region in regions:
 
 							distances[(i,j)] = waydistance(way1, way2)
 							distances[(j,i)] = distances[(i,j)]
-							
+
 					group_id = {}
 					visited = set()
 					d_thr = 8 * 10
-					gid = 0 
+					gid = 0
 					for i in range(len(localways)):
 						if i in visited:
 							continue
 
 						queue = [i]
-						
+
 						while len(queue) > 0:
 							cur = queue.pop()
 							group_id[cur] = gid
@@ -124,8 +124,8 @@ for region in regions:
 									queue.append(j)
 
 						gid += 1
-					
-					
+
+
 					colors = []
 					for r in range(32,256,32):
 						for g in range(32,256,32):
@@ -150,14 +150,14 @@ for region in regions:
 									c_pos += 1
 								else:
 									c_neg += 1
-						
+
 						if c_neg == 0:
 							onewaygid.add(gid_)
 
 					print("find %d groups and %d one-way roads" % (gid, len(onewaygid)))
 					c_road += gid
 					c_oneway_road += len(onewaygid)
-					
+
 					for i in range(len(localways)):
 						color = colors[group_id[i] % len(colors)]
 						way = localways[i]
@@ -177,19 +177,19 @@ for region in regions:
 						gid = group_id[i]
 
 						group_id_list.append([gid, gid in onewaygid])
-					
+
 					json.dump(group_id_list, open(outputfolder + "/group_%d.json" % (counter_out), "w"), indent=2)
 
 					cv2.imwrite(outputfolder + "/group_%d.jpg" % (counter_out), img)
-					
-					
-					
-					
-					
+
+
+
+
+
 					counter_out += 1
 					print(counter_out, c_road, c_oneway_road)
 			counter += 1
-			
+
 print(total_length, total_length / 8 / 1000.0)
 
 

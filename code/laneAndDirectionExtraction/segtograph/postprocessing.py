@@ -1,14 +1,14 @@
-import numpy as np 
+import numpy as np
 
 def graph_refine(graph, isolated_thr = 50 * 3, spurs_thr = 20 * 3, three_edge_loop_thr = 70):
 	neighbors = graph
 
-	gid = 0 
+	gid = 0
 	grouping = {}
 
 	for k, v in neighbors.items():
 		if k not in grouping:
-			# start a search 
+			# start a search
 
 			queue = [k]
 
@@ -16,11 +16,11 @@ def graph_refine(graph, isolated_thr = 50 * 3, spurs_thr = 20 * 3, three_edge_lo
 				n = queue.pop(0)
 
 				if n not in grouping:
-					grouping[n] = gid 
+					grouping[n] = gid
 					for nei in neighbors[n]:
 						queue.append(nei)
 
-			gid += 1 
+			gid += 1
 
 	group_count = {}
 
@@ -47,7 +47,7 @@ def graph_refine(graph, isolated_thr = 50 * 3, spurs_thr = 20 * 3, three_edge_lo
 				a = k[0] - v[0][0]
 				b = k[1] - v[0][1]
 
-				d = np.sqrt(a*a + b*b)	
+				d = np.sqrt(a*a + b*b)
 
 				if d < spurs_thr:
 					remove_list.append(k)
@@ -60,25 +60,25 @@ def graph_refine(graph, isolated_thr = 50 * 3, spurs_thr = 20 * 3, three_edge_lo
 	def isRemoved(k):
 		gid = grouping[k]
 		if group_count[gid][0] <= 1:
-			return True 
+			return True
 		elif group_count[gid][1] <= isolated_thr:
-			return True 
+			return True
 		elif k in remove_list:
-			return True 
+			return True
 		elif k in remove_list2:
 			return True
 		else:
 			return False
 
 	for k, v in neighbors.items():
-		if isRemoved(k): 
+		if isRemoved(k):
 			remove_counter += 1
 			pass
 		else:
 			new_nei = []
 			for nei in v:
 				if isRemoved(nei):
-					pass 
+					pass
 				else:
 					new_nei.append(nei)
 
@@ -92,7 +92,7 @@ def graphInsert(node_neighbor, n1key, n2key):
 	if n1key != n2key:
 		if n1key in node_neighbor:
 			if n2key in node_neighbor[n1key]:
-				pass 
+				pass
 			else:
 				node_neighbor[n1key].append(n2key)
 		else:
@@ -101,7 +101,7 @@ def graphInsert(node_neighbor, n1key, n2key):
 
 		if n2key in node_neighbor:
 			if n1key in node_neighbor[n2key]:
-				pass 
+				pass
 			else:
 				node_neighbor[n2key].append(n1key)
 		else:
@@ -115,10 +115,10 @@ def downsample(graph, rate = 2):
 	for nid, nei in graph.items():
 		new_nid = ((int(nid[0])//rate) * rate,(int(nid[1])//rate) * rate)
 		for nn in nei:
-			new_nn = ((int(nn[0])//rate) * rate,(int(nn[1])//rate) * rate)	
+			new_nn = ((int(nn[0])//rate) * rate,(int(nn[1])//rate) * rate)
 			newgraph = graphInsert(newgraph, new_nid, new_nn)
 
-	return newgraph	
+	return newgraph
 
 def connectDeadEnds(graph, thr = 30):
 	deadends = []
@@ -126,19 +126,19 @@ def connectDeadEnds(graph, thr = 30):
 		if len(nei) == 1:
 			deadends.append(nloc)
 
-	
+
 	for d1 in deadends:
-		cloest = None 
+		cloest = None
 		bestd = thr
 
 		for d2 in deadends:
 			if d2 == d1 :
-				continue 
+				continue
 			d  = np.sqrt((d1[0] - d2[0])**2 + (d1[1] - d2[1])**2 )
 			if d < bestd:
-				bestd = d 
-				cloest = d2 
-		
+				bestd = d
+				cloest = d2
+
 		if cloest is not None:
 			graph = graphInsert(graph, d1, cloest)
 

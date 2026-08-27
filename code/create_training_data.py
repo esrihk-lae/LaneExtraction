@@ -1,5 +1,5 @@
 #import sys
-from subprocess import Popen 
+from subprocess import Popen
 
 Popen("mkdir -p dataset_training", shell=True).wait()
 #Popen("mkdir dataset_evaluation", shell=True).wait()

@@ -1,21 +1,21 @@
 # 25.812813, -80.202372
 
-import json 
-import math 
-from subprocess import Popen 
+import json
+import math
+from subprocess import Popen
 
-import os 
-import sys 
+import os
+import sys
 sys.path.append(os.path.dirname(sys.path[0]))
 
 #from satellite import mapbox as md
 from PIL import Image
 import numpy as np
 import scipy.misc
-import json 
+import json
 import cv2
 import pickle
-from roadstructure import LaneMap 
+from roadstructure import LaneMap
 
 
 
@@ -23,9 +23,9 @@ regions = json.load(open(sys.argv[1]))
 inputfolder = sys.argv[2]
 outputfolder = sys.argv[3]
 
-counter = 0 
+counter = 0
 counter_out = 0
-total_length = 0 
+total_length = 0
 for region in regions:
 	min_lat, min_lon = region["lat"], region["lon"]
 	region_tag = region["tag"]
@@ -47,14 +47,14 @@ for region in regions:
 				labels = pickle.load(open(folder + "/sat_%d_label.p" % (counter), "rb"))
 			except:
 				break
-			
-			roadlabel, masklabel = labels 
+
+			roadlabel, masklabel = labels
 
 			# find all links
 			# - find nodes that belong to both link edges and way edges.
 			# - search for a path between pairs of them.
-			# - store them into a data structure for future use. 
-			
+			# - store them into a data structure for future use.
+
 			terminal_nodes = []
 			for nid in roadlabel.nodes.keys():
 				way_c = 0
@@ -84,7 +84,7 @@ for region in regions:
 					for nn in roadlabel.neighbors[cur]:
 						if roadlabel.edgeType[(cur, nn)] == "way":
 							continue
-						
+
 						if roadlabel.nodeType[nn] == "link":
 							newlist = list(curlist)
 							newlist.append(nn)
@@ -100,7 +100,7 @@ for region in regions:
 			nidmap = {}
 
 			for item in linkset:
-				n1,n2 = item 
+				n1,n2 = item
 				if n1 not in nidmap:
 					nidmap[n1] = [n2]
 				else:
@@ -114,12 +114,12 @@ for region in regions:
 			for nid in terminal_nodes:
 				if nid not in nidmap:
 					nidmap[nid] = []
-	
+
 			print("number of links", len(links))
 			#exit()
 			polygons = masklabel.findAllPolygons()
 			# render masks, lanes, and normals (directions)
-			
+
 			sr = 0
 			sc = 0
 			mask = cv2.imread(outputfolder + "/regionmask_%d.jpg" % (counter_out))
@@ -141,7 +141,7 @@ for region in regions:
 
 				if not outOfRange:
 					locallinks.append(vertices)
-			
+
 			localnodes = {}
 
 			for nid in terminal_nodes:
@@ -155,12 +155,12 @@ for region in regions:
 			counter_out += 1
 			print(counter_out)
 
-			
-			
-			
-			
+
+
+
+
 			counter += 1
-			
+
 print(total_length, total_length / 8 / 1000.0)
 
 
