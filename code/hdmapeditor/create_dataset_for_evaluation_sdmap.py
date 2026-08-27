@@ -1,22 +1,22 @@
 # 25.812813, -80.202372
 
-import json 
-import math 
-from subprocess import Popen 
+import json
+import math
+#from subprocess import Popen		# dky: remove unused import
 
-import os 
-import sys 
+import os
+import sys
 sys.path.append(os.path.dirname(sys.path[0]))
 
 #from satellite import mapbox as md
-from osm import osm 
-from PIL import Image 
-import numpy as np 
-import scipy.misc
-import json 
+from osm import osm
+#from PIL import Image					# dky: remove unused import
+import numpy as np
+#import scipy.misc					# dky: remove unused import
+import json
 import cv2
-import pickle
-from roadstructure import LaneMap 
+#import pickle					# dky: remove unused import
+#from roadstructure import LaneMap		# dky: remove unused import
 
 
 
@@ -24,9 +24,9 @@ regions = json.load(open(sys.argv[1]))
 inputfolder = sys.argv[2]
 outputfolder = sys.argv[3]
 
-counter = 0 
+counter = 0
 counter_out = 0
-total_length = 0 
+total_length = 0
 for region in regions:
 	min_lat, min_lon = region["lat"], region["lon"]
 	region_tag = region["tag"]
@@ -47,13 +47,13 @@ for region in regions:
 			# 	labels = pickle.load(open(folder + "/sat_%d_label.p" % (counter), "rb"))
 			# except:
 			# 	break
-			# roadlabel, masklabel = labels 
+			# roadlabel, masklabel = labels
 
 			OSMMap = osm.OSMLoader(subregion,noUnderground=True, includeServiceRoad=False, useblacklist = False)
-			# TODO draw it 
-			
+			# TODO draw it
+
 			print(len(OSMMap.nodedict))
-			
+
 			#polygons = masklabel.findAllPolygons()
 			# render masks, lanes, and normals (directions)
 			sr,sc = 0,0
@@ -69,24 +69,24 @@ for region in regions:
 
 					x1 = int((lon1 - subregion[1]) / (subregion[3] - subregion[1]) * 4096) - sc
 					y1 = int((subregion[2] - lat1) / (subregion[2] - subregion[0]) * 4096) - sr
-					
+
 					x2 = int((lon2 - subregion[1]) / (subregion[3] - subregion[1]) * 4096) - sc
-					y2 = int((subregion[2] - lat2) / (subregion[2] - subregion[0]) * 4096) - sr 
+					y2 = int((subregion[2] - lat2) / (subregion[2] - subregion[0]) * 4096) - sr
 
 					#print(x1,y1,x2,y2)
 
 					if (x1 >=0 and x1 <= 4096 and y1 >= 0 and y1 <= 4096) or (x2 >=0 and x2 <= 4096 and y2 >= 0 and y2 <= 4096) :
-						cv2.line(sdmap, (x1,y1), (x2,y2), (255), 5) 
-					
+						cv2.line(sdmap, (x1,y1), (x2,y2), (255), 5)
+
 
 			cv2.imwrite(outputfolder + "/sdmap_%d.jpg" % (counter_out), sdmap)
 			counter_out += 1
 			print(counter_out)
-			
+
 			#exit()
 
 			counter += 1
-			
+
 print(total_length, total_length / 8 / 1000.0)
 
 

@@ -1,5 +1,5 @@
-import os 
-import sys 
+import os
+import sys
 sys.path.append(os.path.dirname(os.getcwd()))
 
 import numpy as np 			# pyright: ignore[reportMissingImports]
@@ -10,7 +10,7 @@ from cnnmodels.classifier import resnet18classifier
 
 class LinkModel():
 	def __init__(self, sess, size=640, batchsize=4):
-		self.sess = sess 
+		self.sess = sess
 		self.batchsize = batchsize
 
 		self.input = tf.compat.v1.placeholder(dtype=tf.float32, shape=[None, size, size, 3])			# dky: orig
@@ -29,7 +29,7 @@ class LinkModel():
 		#self.target = tf.compat.v1.placeholder(dtype=tf.float16, shape=[None, size, size, 3])
 
 		self.target_label = tf.compat.v1.placeholder(dtype=tf.float32, shape=[None, 1])
-		
+
 		self.position_code = tf.compat.v1.placeholder(dtype=tf.float32, shape=[None, size, size, 2])
 		#self.position_code = tf.compat.v1.placeholder(dtype=tf.float16, shape=[None, size, size, 2])
 
@@ -52,50 +52,50 @@ class LinkModel():
 		#stacked_inputs = tf.concat([input_data1, input_data2], axis=0)
 
 		with tf.compat.v1.variable_scope("seg"):
-			input_data1 = tf.concat([self.input, self.connector[:,:,:,0:3], self.context, self.position_code], axis=3)	
+			input_data1 = tf.concat([self.input, self.connector[:,:,:,0:3], self.context, self.position_code], axis=3)
 			output_seg1 = resnet34unet_v3(input_data1, self.is_training, ch_in=10, ch_out=2, feature_out=False)
 			#stacked_outputs = resnet34unet_v3(stacked_inputs, self.is_training, ch_in=10, ch_out=2, feature_out=False)
 
-		
+
 		with tf.compat.v1.variable_scope("seg", reuse=tf.compat.v1.AUTO_REUSE):
-			input_data2 = tf.concat([self.input, self.connector[:,:,:,3:6], self.context, self.position_code], axis=3)	
+			input_data2 = tf.concat([self.input, self.connector[:,:,:,3:6], self.context, self.position_code], axis=3)
 			output_seg2 = resnet34unet_v3(input_data2, self.is_training, ch_in=10, ch_out=2, feature_out=False)
-		
+
 		# dky - Split back into individual outputs: Each [batchsize, 640, 640, 2]
 		#output_seg1, output_seg2 = tf.split(stacked_outputs, num_or_size_splits=2, axis=0)
 
 		self.output = tf.concat([tf.nn.softmax(output_seg1)[:,:,:,0:1],tf.nn.softmax(output_seg2)[:,:,:,0:1]], axis=3)
-		
+
 		with tf.compat.v1.variable_scope("class"):
 			input_data = tf.concat([tf.stop_gradient(self.output), self.connector, self.context, self.position_code], axis=3)
 			output_label = resnet18classifier(input_data, self.is_training, ch_in=13, ch_out=2)
 
 		self.output_label = tf.nn.softmax(output_label)
-		
+
 		self.seg_loss = self.singlescaleloss(output_seg1[:,:,:,0:2], self.target[:,:,:,1:2], 1.0)
 		self.seg_loss += self.singlescaleloss(output_seg2[:,:,:,0:2], self.target[:,:,:,2:3], 1.0)
 		self.class_loss = tf.math.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=tf.concat([self.target_label, 1-self.target_label], axis=1), logits=output_label))
 		self.loss = self.seg_loss + self.class_loss
-		
+
 
 		self.train_op = tf.compat.v1.train.AdamOptimizer(learning_rate=self.lr).minimize(self.loss)
-		
+
 		self.sess.run(tf.compat.v1.global_variables_initializer())
-		
+
 		#self.seg_saver = tf.compat.v1.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='seg'), max_to_keep=5)
 		#self.class_saver = tf.compat.v1.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='class'), max_to_keep=5)
-		
+
 		#self.train_class_op = tf.train.AdamOptimizer(learning_rate=self.lr).minimize(self.class_loss)
 		#self.train_seg_op = tf.train.AdamOptimizer(learning_rate=self.lr).minimize(self.seg_loss)
-		
+
 		#self.sess.run(tf.compat.v1.global_variables_initializer())
 		#self.sess.run(tf.variables_initializer(tf.global_variables()[num:]))
 
 		self.saver = tf.compat.v1.train.Saver(max_to_keep=15)
-	
+
 	def singlescaleloss(self, p, target, mask, keepbatchdim=False):
 		t1 = target
-		
+
 		def ce_loss(p, t):
 			#t = tf.concat([t,1-t], axis=3)
 			pp0 = p[:,:,:,0:1]
@@ -124,8 +124,8 @@ class LinkModel():
 
 		loss = 0
 		loss += ce_loss(p, t1) + dice_loss(p, t1) * 0.333
-		
-		return loss 
+
+		return loss
 
 	def celoss(self, p, target, mask):
 		t1 = target
@@ -151,10 +151,10 @@ class LinkModel():
 			self.position_code : self.position_code_np
 		}
 
-		ops = [self.loss, self.seg_loss, self.class_loss, self.output,self.output_label, self.train_op]# + list(self.atts) 
-		
+		ops = [self.loss, self.seg_loss, self.class_loss, self.output,self.output_label, self.train_op]# + list(self.atts)
+
 		return self.sess.run(ops, feed_dict=feed_dict)
-	
+
 	def trainClassonly(self, x_in, x_connector, target, target_label, context, lr):
 		feed_dict = {
 			self.input : x_in,
@@ -167,7 +167,7 @@ class LinkModel():
 		}
 
 		ops = [self.class_loss, self.class_loss, self.class_loss, self.output, self.output_label, self.train_class_op]
-		
+
 		return self.sess.run(ops, feed_dict=feed_dict)
 
 	def infer(self, x_in, x_connector, context):
@@ -180,7 +180,7 @@ class LinkModel():
 		}
 
 		ops = [self.output_label, self.output]
-		
+
 		return self.sess.run(ops, feed_dict=feed_dict)
 
 	def evaluate(self, x_in, x_mask, target):

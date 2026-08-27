@@ -1,21 +1,21 @@
 # 25.812813, -80.202372
 
-import json 
-import math 
-from subprocess import Popen 
+import json
+import math
+from subprocess import Popen
 
-import os 
-import sys 
+import os
+import sys
 sys.path.append(os.path.dirname(sys.path[0]))
 
 #from satellite import mapbox as md
-from PIL import Image 
-import numpy as np 
+from PIL import Image
+import numpy as np
 import scipy.misc
-import json 
+import json
 import cv2
 import pickle
-from roadstructure import LaneMap 
+from roadstructure import LaneMap
 
 
 
@@ -23,9 +23,9 @@ regions = json.load(open(sys.argv[1]))
 inputfolder = sys.argv[2]
 outputfolder = sys.argv[3]
 
-counter = 0 
+counter = 0
 counter_out = 0
-total_length = 0 
+total_length = 0
 for region in regions:
 	min_lat, min_lon = region["lat"], region["lon"]
 	region_tag = region["tag"]
@@ -47,14 +47,14 @@ for region in regions:
 				labels = pickle.load(open(folder + "/sat_%d_label.p" % (counter), "rb"))
 			except:
 				break
-			
-			roadlabel, masklabel = labels 
 
-			# find all ways 
+			roadlabel, masklabel = labels
+
+			# find all ways
 			# - find nodes that belong to terminals or way intersections.
 			# - search for a path between pairs of them.
-			# - store them into a data structure for future use. 
-			
+			# - store them into a data structure for future use.
+
 			terminal_nodes = []
 			for nid in roadlabel.nodes.keys():
 				way_c = 0
@@ -76,7 +76,7 @@ for region in regions:
 					terminal_nodes.append(nid)
 				elif way_c == 1 and link_c == 0:
 					terminal_nodes.append(nid)
-					
+
 			wayset = set()
 			ways = []
 			for nid in terminal_nodes:
@@ -95,7 +95,7 @@ for region in regions:
 						ways.append(list(curlist))
 						wayset.add((curlist[0], curlist[-1]))
 						continue
- 
+
 
 					for nn in roadlabel.neighbors[cur]:
 						if roadlabel.nodeType[nn] == "way":
@@ -117,7 +117,7 @@ for region in regions:
 				pd = [0]
 				for i in range(len(node_list)-1):
 					pd.append(pd[-1] + distance(node_list[i], node_list[i+1]))
-				
+
 				interpolate_N = int(pd[-1]/density)
 
 				last_loc = node_list[0]
@@ -131,15 +131,15 @@ for region in regions:
 
 							loc = ((1-a) * node_list[j][0] + a * node_list[j+1][0], (1-a) * node_list[j][1] + a * node_list[j+1][1])
 							nway.append((int(loc[0]), int(loc[1])) )
-							last_loc = loc 
+							last_loc = loc
 				nway.append(node_list[-1])
 				newways.append(nway)
-			
+
 			ways = newways
 
 			# nidmap = {}
 			# for item in wayset:
-			# 	n1,n2 = item 
+			# 	n1,n2 = item
 			# 	if n1 not in nidmap:
 			# 		nidmap[n1] = [n2]
 			# 	else:
@@ -153,12 +153,12 @@ for region in regions:
 			# for nid in terminal_nodes:
 			# 	if nid not in nidmap:
 			# 		nidmap[nid] = []
-	
+
 			print("number of ways", len(ways))
 			#exit()
 			#polygons = masklabel.findAllPolygons()
 			# render masks, lanes, and normals (directions)
-			
+
 			sr = 0
 			sc = 0
 			mask = cv2.imread(outputfolder + "/regionmask_%d.jpg" % (counter_out))
@@ -174,7 +174,7 @@ for region in regions:
 					x = loc[0] - sc - margin
 					y = loc[1] - sr - margin
 					vertices.append([x,y])
-						
+
 					if x > 0 and x < 4096 and y > 0 and y < 4096 and mask[y,x,0] > 127:
 						in_cc += 1
 					else:
@@ -183,7 +183,7 @@ for region in regions:
 
 				if in_cc >= out_cc * 2:
 					localways.append(vertices)
-			
+
 			# localnodes = {}
 
 			# for nid in terminal_nodes:
@@ -197,12 +197,12 @@ for region in regions:
 			counter_out += 1
 			print(counter_out)
 
-			
-			
-			
-			
+
+
+
+
 			counter += 1
-			
+
 print(total_length, total_length / 8 / 1000.0)
 
 

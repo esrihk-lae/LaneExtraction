@@ -87,7 +87,7 @@ class Train(TrainingFramework):
 
 	def getProgress(self, step):
 		return step / float(self.epochsize)
-	
+
 
 	def saveModel(self, step, progress=None):
 		save_every_epochs = 10

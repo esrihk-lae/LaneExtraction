@@ -26,13 +26,13 @@ class Train(TrainingFramework):
 		self.datafolder = "../dataset_training"
 		self.training_range = []
 		dataset_split = json.load(open("../split_all.json"))
-		
+
 		for tid in dataset_split["training"]:
 			for i in range(9):
 				self.training_range.append("_%d" % (tid*9+i))
-	
+
 		self.instance = f"_turningLaneExtraction_{self.image_size}_resnet34_{mode}-{timestamp}"
-		
+
 		self.modelfolder = f"model{self.instance}"
 		self.validationfolder = f"validation{self.instance}"
 
@@ -43,7 +43,7 @@ class Train(TrainingFramework):
 		self.disloss = 0
 
 		self.epochsize = len(self.training_range) * 2048 * 2048 / (self.batch_size * self.image_size * self.image_size)
-		
+
 		pass
 
 	def createDataloader(self, mode):
@@ -53,7 +53,7 @@ class Train(TrainingFramework):
 
 	def createModel(self, sess):
 		self.model = LinkModel(sess, self.image_size, batchsize=self.batch_size)
-		
+
 		return self.model
 
 	def getBatch(self, dataloader):
@@ -63,7 +63,7 @@ class Train(TrainingFramework):
 	def train(self, batch, lr):
 		self.counter += 1
 		ret = self.model.train(batch[0], batch[1], batch[2], batch[3], batch[4], lr)
-	
+
 		return ret
 
 
@@ -109,14 +109,14 @@ class Train(TrainingFramework):
 
 	def visualization(self, step, result=None, batch=None):
 		direction_img = np.zeros((self.image_size, self.image_size, 3))
-		
+
 		if step % 100 == 0:
 			ind = ((step // 100) * self.batch_size) % 128
 			for i in range(self.batch_size):
 				Image.fromarray(((batch[0][i,:,:,:] + 0.5) * 255).astype(np.uint8)).save(self.validationfolder + "/input%d.jpg" % (ind+i))
 				Image.fromarray(((batch[1][i,:,:,0:3]) * 127 + 127).astype(np.uint8)).save(self.validationfolder + "/connector1%d.jpg" % (ind+i))
 				Image.fromarray(((batch[1][i,:,:,3:6]) * 127 + 127).astype(np.uint8)).save(self.validationfolder + "/connector2%d.jpg" % (ind+i))
-				
+
 				Image.fromarray(((batch[2][i,:,:,0]) * 255).astype(np.uint8)).save(self.validationfolder + "/target%d.jpg" % (ind+i))
 				Image.fromarray(((result[1][i,:,:,0]) * 255).astype(np.uint8)).save(self.validationfolder + "/output%d.jpg" % (ind+i))
 
@@ -136,11 +136,11 @@ class Train(TrainingFramework):
 				direction_img[:,:,0] += batch[1][i,:,:,0] * 255 + 127
 				direction_img[:,:,1] += batch[1][i,:,:,3] * 255 + 127
 				direction_img[:,:,2] += batch[1][i,:,:,6] * 255 + 127
-				
+
 				direction_img = np.clip(direction_img, 0, 255)
 
 				Image.fromarray(direction_img.astype(np.uint8)).save(self.validationfolder + "/direction%d.jpg" % (ind+i))
-				
+
 		return False
 
 
@@ -161,5 +161,5 @@ if __name__ == "__main__":
 	config["use_validation"] = False
 	#config["logfile"] = "log_%s.json" % trainer.instance
 	config["logfile"] = f"log_{trainer.instance}.json"
-	
+
 	trainer.run(config)

@@ -60,7 +60,7 @@ class LinkModel():
 				loss = tf.math.reduce_mean(loss * mask, axis=[1,2,3])
 			else:
 				loss = tf.math.reduce_mean(loss * mask)
-				
+
 			return loss
 
 		def dice_loss(p, t):

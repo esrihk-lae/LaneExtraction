@@ -57,7 +57,7 @@ def segtograph(in_fname, threshold, isolated_thr = 32, spur_thr = 0, deadend_thr
         #im = scipy.ndimage.imread(in_fname)        # dky: scipy.ndimage.imread deprecated; migrate to use imageio (below)
         im = imageio.imread(in_fname)
     else:
-        im = in_fname 
+        im = in_fname
 
     if len(im.shape) == 3:
         # print 'warning: bad shape {}, using first channel only'.format(im.shape)      # dky: orig
@@ -153,7 +153,7 @@ def segtograph(in_fname, threshold, isolated_thr = 32, spur_thr = 0, deadend_thr
 
         nk1 = (vertex[edge[0]][1],vertex[edge[0]][0])
         nk2 = (vertex[edge[1]][1],vertex[edge[1]][0])
-        
+
         if nk1 != nk2:
             if nk1 in neighbors:
                 if nk2 in neighbors[nk1]:
@@ -165,13 +165,13 @@ def segtograph(in_fname, threshold, isolated_thr = 32, spur_thr = 0, deadend_thr
 
             if  nk2 in neighbors:
                 if nk1 in neighbors[nk2]:
-                    pass 
+                    pass
                 else:
                     neighbors[nk2].append(nk1)
             else:
                 neighbors[nk2] = [nk1]
 
-            
+
     g = graph_refine(neighbors, isolated_thr=isolated_thr, spurs_thr=spur_thr)
     g = connectDeadEnds(g, thr=deadend_thr)
     #pickle.dump(g, open(out_fname, "w"))

@@ -1,16 +1,14 @@
-import os 
-import sys 
+import os
+import sys
 sys.path.append(os.path.dirname(sys.path[0]))
 
 import cv2
 import json
-import sys 
-import os 
-import numpy as np 
+import numpy as np
 from time import time, sleep
-from roadstructure import LaneMap 
+from roadstructure import LaneMap
 
-import math 
+import math
 import pickle
 import requests
 
@@ -23,7 +21,7 @@ if len(sys.argv) > 4:
 	image[:,:,0] = r
 	image[:,:,1] = b
 	image[:,:,2] = g
-	
+
 
 margin = 128
 margin_for_cnn = 512
@@ -69,7 +67,7 @@ if os.path.exists(annotation):
 	else:
 		laneMaps = [data, LaneMap()]
 else:
-	laneMaps = [LaneMap(), LaneMap()]	
+	laneMaps = [LaneMap(), LaneMap()]
 #laneMaps[1] = LaneMap()
 laneMap = laneMaps[0]
 laneMap.checkConsistency()
@@ -123,11 +121,11 @@ def mouseEventHandler(event,x,y,flags,param):
 	global edgeType
 	global lastNodeID
 	global activeLinks
-	global zoom 
+	global zoom
 	global laneMap
 	global erase_size
 	mousex, mousey = x, y
-	
+
 	#print(x,y,event, flags, param)
 	global_x, global_y = x // zoom + pos[0], y // zoom + pos[1]
 
@@ -148,31 +146,31 @@ def mouseEventHandler(event,x,y,flags,param):
 			else:
 				lastNodeID = existing_node
 				editingMode = "drawing_polyline"
-			
+
 
 		elif editingMode == "drawing_polyline":
 			existing_node = laneMap.query((global_x, global_y), activeLinks)
 			if existing_node is None:
 				# if in delete mode, do nothing
 				if deleteMode == "(delete)":
-					pass 
+					pass
 				else:
 					nid = laneMap.addNode((global_x, global_y))
-					# if nid == lastNodeID: # stop drawing 
+					# if nid == lastNodeID: # stop drawing
 					#     editingMode == "ready_to_draw":
-					#     lastNodeID = None 
+					#     lastNodeID = None
 					# else:
 					laneMap.addEdge(lastNodeID, nid, edgeType)
-					lastNodeID = nid 
-				
+					lastNodeID = nid
+
 			else:
-				if existing_node == lastNodeID: # stop drawing 
+				if existing_node == lastNodeID: # stop drawing
 					# if in delete mode, delete the node
 					if deleteMode == "(delete)":
 						laneMap.deleteNode(lastNodeID)
 						if lastNodeID in activeLinks:
 							activeLinks.remove(lastNodeID)
-					
+
 					editingMode ="ready_to_draw"
 					lastNodeID = None
 				else:
@@ -189,13 +187,13 @@ def mouseEventHandler(event,x,y,flags,param):
 			if existing_node is not None:
 				lastNodeID = existing_node
 				editingMode = "editing"
-		
+
 		elif editingMode == "editing":
 			editingMode = "ready_to_edit"
-			lastNodeID = None 
+			lastNodeID = None
 
 		elif editingMode == "selecting_link":
-			
+
 			existing_node = laneMap.query((global_x, global_y))
 			if existing_node is not None:
 				activeLinks = laneMap.findLink(existing_node)
@@ -204,7 +202,7 @@ def mouseEventHandler(event,x,y,flags,param):
 				activeLinks = []
 
 			editingMode = "ready_to_edit"
-		
+
 		elif editingMode == "autofill_stage1":
 			existing_node = laneMap.query((global_x, global_y))
 			if existing_node is not None:
@@ -224,43 +222,43 @@ def mouseEventHandler(event,x,y,flags,param):
 					c1 = laneMap.nodes[autofill_nodes[0]][0] + margin_for_cnn - margin
 					r2 = laneMap.nodes[autofill_nodes[1]][1] + margin_for_cnn - margin
 					c2 = laneMap.nodes[autofill_nodes[1]][0] + margin_for_cnn - margin
-					
+
 					mr = (r1+r2) // 2
 					mc = (c1+c2) // 2
 					cnnsize = 640
 
 					sat = image_for_cnn[mr-cnnsize//2:mr+cnnsize//2,mc-cnnsize//2:mc+cnnsize//2,:]
 
-					# render 
+					# render
 					seg = np.zeros_like(sat)
 					direction = np.zeros_like(sat) + 127
 					connector = np.zeros_like(sat)
 
-					# 
+					#
 					for nid, nei in laneMap.neighbors.items():
 						x1 = laneMap.nodes[nid][0] + margin_for_cnn - margin - (mc-cnnsize//2)
 						y1 = laneMap.nodes[nid][1] + margin_for_cnn - margin - (mr-cnnsize//2)
-						
+
 						for nn in nei:
 							if laneMap.edgeType[(nid,nn)] != "way":
 								continue
-							
+
 							x2 = laneMap.nodes[nn][0] + margin_for_cnn - margin - (mc-cnnsize//2)
 							y2 = laneMap.nodes[nn][1] + margin_for_cnn - margin - (mr-cnnsize//2)
 
 							dx = x2 - x1
 							dy = y2 - y1
 							l = math.sqrt(float(dx*dx + dy*dy))
-							dx /= l 
+							dx /= l
 							dy /= l
 
 							if laneMap.edgeType[(nid,nn)] == "way":
 								#color = (127 + int(dx * 127), 127 + int(dy * 127), 127)
 								color = (127 + int(dx * 127), 127 + int(dy * 127), 127)
-							
+
 							cv2.line(seg, (x1,y1), (x2,y2), (255,255,255), 5)
 							cv2.line(direction, (x1,y1), (x2,y2), color, 5)
-							
+
 					cv2.circle(connector, (c1 - (mc-cnnsize//2), r1 - (mr-cnnsize//2)), 8, (255,255,255), -1)
 					cv2.circle(connector, (c2 - (mc-cnnsize//2), r2 - (mr-cnnsize//2)), 8, (255,255,255), -1)
 
@@ -269,7 +267,7 @@ def mouseEventHandler(event,x,y,flags,param):
 					cv2.imwrite("tmp_connector.png", connector)
 					cv2.imwrite("tmp_seg.png", seg)
 
-					
+
 					# TODO connect to server
 					data = {"p1": [c1 - (mc-cnnsize//2), r1 - (mr-cnnsize//2)]}
 					data["p2"] = [c2 - (mc-cnnsize//2), r2 - (mr-cnnsize//2)]
@@ -284,14 +282,14 @@ def mouseEventHandler(event,x,y,flags,param):
 						for i in range(1, len(link)):
 							x1 = link[i][1] + (mc-cnnsize//2) + margin - margin_for_cnn
 							y1 = link[i][0] + (mr-cnnsize//2) + margin - margin_for_cnn
-							
-							nid1 = lastnid 
+
+							nid1 = lastnid
 
 							if i == len(link)-1:
 								nid2 = autofill_nodes[1]
 							else:
 								nid2 = laneMap.addNode((x1,y1))
-								lastnid = nid2 
+								lastnid = nid2
 
 							laneMap.addEdge(nid1, nid2, edgetype="link")
 					editingMode = "autofill_stage1"
@@ -319,19 +317,19 @@ def mouseEventHandler(event,x,y,flags,param):
 			prev_loc = (x1,y1)
 			prev_nid = autofill_nodes[0]
 			for i in range(N):
-				alpha = float(i+1) / N 
-				loc = interpolate(interpolate((x1,y1), (x3,y3), alpha),interpolate((x3,y3), (x2,y2), alpha),alpha) 
+				alpha = float(i+1) / N
+				loc = interpolate(interpolate((x1,y1), (x3,y3), alpha),interpolate((x3,y3), (x2,y2), alpha),alpha)
 
 				if i == N - 1:
 					nid = autofill_nodes[1]
 				else:
 					nid = laneMap.addNode((int(loc[0]),int(loc[1])))
-				
+
 				laneMap.addEdge(prev_nid, nid, edgetype="link")
-				
+
 				#cv2.line(frame, (int(prev_loc[0]),int(prev_loc[1])), (int(loc[0]),int(loc[1])), (255,0,255),2,cv2.LINE_AA)
-				prev_loc = loc 
-				prev_nid = nid 
+				prev_loc = loc
+				prev_nid = nid
 
 
 			editingMode = "autofill_stage1"
@@ -340,7 +338,7 @@ def mouseEventHandler(event,x,y,flags,param):
 			rmlist = []
 			for nid, loc in laneMap.nodes.items():
 				if loc[0] > global_x - erase_size*50//zoom and loc[0] < global_x + erase_size*50//zoom:
-					if loc[1] > global_y - erase_size*50//zoom and loc[1] < global_y + erase_size*50//zoom: 
+					if loc[1] > global_y - erase_size*50//zoom and loc[1] < global_y + erase_size*50//zoom:
 						rmlist.append(nid)
 
 			for nid in rmlist:
@@ -362,13 +360,13 @@ def dashline(img, p1,p2,color,width,linetype):
 
 		x1 = int(p1[0] * (1-a1) + p2[0] * a1)
 		y1 = int(p1[1] * (1-a1) + p2[1] * a1)
-		 
+
 		x2 = int(p1[0] * (1-a2) + p2[0] * a2)
 		y2 = int(p1[1] * (1-a2) + p2[1] * a2)
 
 		cv2.line(img, (x1,y1), (x2,y2), color, width, linetype)
 
-		
+
 
 def redraw(noshow=False, transpose = False):
 	global zoom
@@ -388,7 +386,7 @@ def redraw(noshow=False, transpose = False):
 
 
 	t0 = time()
-	
+
 	laneMap = laneMaps[0]
 	currentLastNodeID = lastNodeID
 	if activeLaneMap == 1:
@@ -397,7 +395,7 @@ def redraw(noshow=False, transpose = False):
 	frame = np.copy(image[pos[1]:pos[1] + windowsize[1] // zoom, pos[0]:pos[0] + windowsize[0] // zoom, :])
 	if zoom > 1:
 		frame = cv2.resize(frame, (windowsize[0], windowsize[1]))
-		
+
 	#print(laneMap.neighbors)
 	for renderpass in [0,1]:
 		for nid, nei in laneMap.neighbors.items():
@@ -409,7 +407,7 @@ def redraw(noshow=False, transpose = False):
 				#continue
 
 			for nn in nei:
-				
+
 				if laneMap.edgeType[(nid,nn)] == "way":
 					color = (0,255,0)
 					lanetype = "way"
@@ -435,7 +433,7 @@ def redraw(noshow=False, transpose = False):
 				dx = x2 - x1
 				dy = y2 - y1
 				l = math.sqrt(float(dx*dx + dy*dy)) + 0.001
-				dx /= l 
+				dx /= l
 				dy /= l
 
 				if vis_switch_no_direction:
@@ -445,13 +443,13 @@ def redraw(noshow=False, transpose = False):
 					else:
 						dx = 0
 						dy = 1
-				
+
 
 				if laneMap.edgeType[(nid,nn)] == "way":
 					#color = (127, 127 + int(dx * 127), 127 + int(dy * 127))
 					if transpose:
 						color = (192, 192 + int(-dy * 63), 192 + int(-dx * 63))
-					else:	
+					else:
 						color = (192, 192 + int(dx * 63), 192 + int(dy * 63))
 				else:
 					if transpose:
@@ -464,7 +462,7 @@ def redraw(noshow=False, transpose = False):
 
 				if vis_switch_no_link and laneMap.edgeType[(nid,nn)] == "link":
 					continue
-				
+
 				if vis_switch_no_way and laneMap.edgeType[(nid,nn)] == "way":
 					continue
 
@@ -542,7 +540,7 @@ def redraw(noshow=False, transpose = False):
 				for nei in laneMap.neighbors_all[nid]:
 					if ((nei, nid) in laneMap.edgeType and laneMap.edgeType[(nei, nid)] == "link") or ((nid, nei) in laneMap.edgeType and laneMap.edgeType[(nid, nei)] == "link"):
 						cv2.circle(frame, (x1,y1),5,(255,0,0),2)
-			
+
 
 	# draw active nodes
 	for nid in activeLinks:
@@ -560,23 +558,23 @@ def redraw(noshow=False, transpose = False):
 			cv2.circle(frame, (x1,y1),5,(0,0,255),2)
 
 	# draw virtual lines
-	if (editingMode == "drawing_polyline" or editingMode == "autofill_stage2")  and lastNodeID is not None: 
+	if (editingMode == "drawing_polyline" or editingMode == "autofill_stage2")  and lastNodeID is not None:
 		x1 = (laneMap.nodes[lastNodeID][0] - pos[0]) * zoom
 		y1 = (laneMap.nodes[lastNodeID][1] - pos[1]) * zoom
 		x2 = mousex
-		y2 = mousey 
+		y2 = mousey
 		if edgeType == "way":
 			cv2.line(frame, (x1,y1), (x2,y2), (0,255,0),2,cv2.LINE_AA)
 		else:
 			cv2.line(frame, (x1,y1), (x2,y2), (255,0,0),2,cv2.LINE_AA)
-	
+
 	if editingMode == "autofill_stage3":
 		x1 = (laneMap.nodes[autofill_nodes[0]][0] - pos[0]) * zoom
 		y1 = (laneMap.nodes[autofill_nodes[0]][1] - pos[1]) * zoom
 		x2 = (laneMap.nodes[autofill_nodes[1]][0] - pos[0]) * zoom
 		y2 = (laneMap.nodes[autofill_nodes[1]][1] - pos[1]) * zoom
 		x3 = mousex
-		y3 = mousey 
+		y3 = mousey
 
 		cv2.line(frame, (x1,y1), (x2,y2), (255,255,0), 2, cv2.LINE_AA)
 		cv2.line(frame, (x1,y1), (x3,y3), (255,255,0), 1, cv2.LINE_AA)
@@ -590,11 +588,11 @@ def redraw(noshow=False, transpose = False):
 
 		prev_loc = (x1,y1)
 		for i in range(N):
-			alpha = float(i+1) / N 
-			loc = interpolate(interpolate((x1,y1), (x3,y3), alpha), interpolate((x3,y3), (x2,y2), alpha),alpha) 
+			alpha = float(i+1) / N
+			loc = interpolate(interpolate((x1,y1), (x3,y3), alpha), interpolate((x3,y3), (x2,y2), alpha),alpha)
 
 			cv2.line(frame, (int(prev_loc[0]),int(prev_loc[1])), (int(loc[0]),int(loc[1])), (255,0,255),2,cv2.LINE_AA)
-			prev_loc = loc 
+			prev_loc = loc
 
 
 	# render mask
@@ -604,7 +602,7 @@ def redraw(noshow=False, transpose = False):
 
 	laneMap = laneMaps[1]
 	polygons = laneMap.findAllPolygons()
-	
+
 	mask = np.zeros_like(frame)
 
 	for polygon in polygons:
@@ -628,7 +626,7 @@ def redraw(noshow=False, transpose = False):
 	for nid, nei in laneMap.neighbors.items():
 		x1 = (laneMap.nodes[nid][0] - pos[0]) * zoom
 		y1 = (laneMap.nodes[nid][1] - pos[1]) * zoom
-		
+
 		for nn in nei:
 			color = (0,0,255)
 
@@ -638,7 +636,7 @@ def redraw(noshow=False, transpose = False):
 			dx = x2 - x1
 			dy = y2 - y1
 			l = math.sqrt(float(dx*dx + dy*dy))
-			dx /= l 
+			dx /= l
 			dy /= l
 			scale = 5
 			mx = (x1+x2) // 2
@@ -648,14 +646,14 @@ def redraw(noshow=False, transpose = False):
 				cv2.line(mask, (mx + int(dx * scale), my+int(dy * scale)), (mx - int(dy * scale), my+int(dx * scale)), color,2)
 				cv2.line(mask, (mx + int(dx * scale), my+int(dy * scale)), (mx + int(dy * scale), my-int(dx * scale)), color,2)
 				cv2.line(frame, (x1,y1), (x2,y2), color,2,cv2.LINE_AA)
-	
+
 	for nid, p in laneMap.nodes.items():
 		x1 = (p[0] - pos[0]) * zoom
 		y1 = (p[1] - pos[1]) * zoom
 
 		if noshow == False:
 			cv2.circle(mask, (x1,y1),3,(0,255,255),-1)
-		
+
 	# # draw active nodes
 	# for nid in activeLinks:
 	# 	x1 = (laneMap.nodes[nid][0] - pos[0]) * zoom
@@ -671,17 +669,17 @@ def redraw(noshow=False, transpose = False):
 		cv2.circle(mask, (x1,y1),5,(0,0,255),2)
 
 	# draw virtual lines
-	if editingMode == "drawing_polyline" and lastNodeID is not None: 
+	if editingMode == "drawing_polyline" and lastNodeID is not None:
 		x1 = (laneMap.nodes[lastNodeID][0] - pos[0]) * zoom
 		y1 = (laneMap.nodes[lastNodeID][1] - pos[1]) * zoom
 		x2 = mousex
-		y2 = mousey 
+		y2 = mousey
 		if edgeType == "way":
 			cv2.line(mask, (x1,y1), (x2,y2), (0,255,0), 2, cv2.LINE_AA)
 		else:
 			cv2.line(mask, (x1,y1), (x2,y2), (255,0,0), 2, cv2.LINE_AA)
 
-	
+
 	frame = cv2.add(frame, mask)
 	lastNodeID = currentLastNodeID
 
@@ -692,7 +690,7 @@ def redraw(noshow=False, transpose = False):
 	r2 = r1 + np.shape(crop)[0]
 	c2 = c1 + np.shape(crop)[1]
 	#print(f"minimap: {minimap.shape}, crop: {crop.shape}")
-	minimap[r1:r2, c1:c2, :] = crop	
+	minimap[r1:r2, c1:c2, :] = crop
 
 	# draw minimap
 	if vis_switch_no_minimap == False:
@@ -713,7 +711,7 @@ def redraw(noshow=False, transpose = False):
 
 	if editingMode == "ready_to_edit":
 		color = (0,255,255)
-	
+
 	if deleteMode == "(delete)":
 		color = (0,0,255)
 
@@ -724,11 +722,11 @@ def redraw(noshow=False, transpose = False):
 	else:
 		cv2.line(frame, (mousex - 50, mousey), (mousex + 50, mousey), color, 1)
 		cv2.line(frame, (mousex, mousey - 50), (mousex, mousey + 50), color, 1)
-	
+
 	# add text
 	if noshow == False:
 		cv2.putText(frame, "%s | %s | Layer %d | Render Time %.3f Seconds" % (editingMode+deleteMode, edgeType, activeLaneMap, renderTime), (10,32), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,255), 2, cv2.LINE_AA)
-				
+
 	laneMap = laneMaps[activeLaneMap]
 	if noshow==False:
 		cv2.imshow("image",frame)
@@ -741,7 +739,7 @@ if len(sys.argv) > 3:
 
 	pos = config["pos"]
 
-	
+
 
 	vis_switch_no_direction = config["no_direction"] if "no_direction" in config else vis_switch_no_direction
 	vis_switch_no_arrow = config["no_arrow"] if "no_arrow" in config else vis_switch_no_arrow
@@ -775,13 +773,13 @@ if len(sys.argv) > 3:
 	# py = 80
 	# img[dimx-py-1:dimx-py+1, dimy-100:dimy-20, :] = 0
 
-	
+
 	# for i in range(11):
 	# 	if i == 0 or i == 10:
 	# 		img[dimx-py-10:dimx-py+10, dimy-101+i*8:dimy-99+i*8, :] = 0
 	# 	else:
 	# 		img[dimx-py-6:dimx-py+1, dimy-101+i*8:dimy-99+i*8, :] = 0
-	
+
 
 
 	cv2.imwrite(config["output"], img)
@@ -812,7 +810,7 @@ while True:
 		pos[0] = max(0, pos[0] - 100)
 		hasUpdate = True
 		print(pos)
-	
+
 	if k == ord("s"):
 		pos[1] = min(dim[0] - windowsize[1] // zoom, pos[1] + 100)
 		hasUpdate = True
@@ -822,7 +820,7 @@ while True:
 		pos[0] = min(dim[1] - windowsize[0] // zoom, pos[0] + 100)
 		hasUpdate = True
 		print(pos)
-	
+
 	if k == ord("e"):
 		if editingMode == "ready_to_edit":
 			editingMode = "ready_to_draw"
@@ -837,7 +835,7 @@ while True:
 			editingMode = "ready_to_draw"
 
 		hasUpdate = True
-		
+
 	if k == ord("q"):
 		if edgeType == "link":
 			edgeType = "way"
@@ -868,7 +866,7 @@ while True:
 	if k == ord("3"):
 		zoom = 3
 		hasUpdate = True
-	
+
 	if k == ord("m"):
 		activeLaneMap = (activeLaneMap + 1) % 2
 		laneMap = laneMaps[activeLaneMap]
@@ -876,14 +874,14 @@ while True:
 		edgeType = "way"
 
 		hasUpdate = True
-	
+
 	if k == ord("x"):
 		if deleteMode == " ":
 			deleteMode = "(delete)"
 		else:
 			deleteMode = " "
 		hasUpdate = True
-	
+
 	if k == ord("r"):
 		if editingMode == "erase":
 			editingMode = "ready_to_draw"
@@ -902,7 +900,7 @@ while True:
 	if k == ord("6"):
 		erase_size = 4
 		hasUpdate = True
-	
+
 	#print(lastMousex, mousex, lastMousey, mousey)
 
 	if lastMousex != mousex or lastMousey != mousey:

@@ -1,5 +1,5 @@
-from subprocess import Popen 
-import sys 
+from subprocess import Popen
+import sys
 
 #for i in [0,5,6,11,12,17,18,22,25,28,31]:
 for i in [5]:
