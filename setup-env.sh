@@ -33,6 +33,7 @@ docker run --interactive --tty \
 # both bare metal / docker:
 # system pre-requisites; requires root
 if [ "$(id -u)" -eq 0 ]; then
+    groupadd -g 993 render
     apt update && \
     apt install -y build-essential libssl-dev zlib1g-dev \
                    libbz2-dev libsqlite3-dev libffi-dev tk-dev
@@ -92,10 +93,13 @@ source tf115/bin/activate
 
 
 ### PYTHON DEPENDENCIES ###
+### Applies to: ALL ###
 # need to install: tflearn==0.5.0, Pillow==8.4.0
 
 # add NVIDIA index:
-cd && pip3 config set global.extra-index-url https://pypi.nvidia.com && pip3 config unset global.extra-index-url https://pypi.ngc.nvidia.com
+# pip3 config file location:  /root/.config/pip/pip.conf
+cd && pip3 config set global.extra-index-url https://pypi.nvidia.com
+# pip3 config unset global.extra-index-url https://pypi.ngc.nvidia.com
 
 #pip3 install --upgrade setuptools wheel
 pip3 install nvidia-pyindex
@@ -145,4 +149,10 @@ pip3 install mapbox
 # You now have a tested and working TF 1.15 This is the latest build of what they are using on NGC nv21.08
 # If you have already installed Anaconda Python instead of miniconda3 then just start at conda update conda and conda update --all
 #  (That is important so that you are using a new enough version of pip to resolve the dependencies properly)
+
+
+
+## --- test inference:
+python3 ./infer.py ../../dataset-hk/test-hk-20260827-01.jpg output resnet34v3
+
 

@@ -5,7 +5,7 @@ sys.path.append(os.path.dirname(sys.path[0]))
 sys.path.append("../cnnmodels")
 import json
 import math
-from decimal import Decimal
+#from decimal import Decimal
 
 from PIL import Image			# pyright: ignore[reportMissingImports]
 import numpy as np  			# pyright: ignore[reportMissingImports]
@@ -37,8 +37,8 @@ class Train(TrainingFramework):
 		if self.use_sdmap:
 			self.instance += "_withsdmap"
 
-		self.modelfolder = "model" + self.instance
-		self.validationfolder = "validation" + self.instance
+		self.modelfolder = f"model{self.instance}"
+		self.validationfolder = f"validation{self.instance}"
 
 		#Popen("mkdir -p " + self.modelfolder, shell=True).wait()
 		os.makedirs(self.modelfolder, exist_ok=True)
