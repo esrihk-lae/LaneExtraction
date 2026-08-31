@@ -16,7 +16,7 @@ class ModelFramework():
 		return self.inputs["lr"], self.inputs["is_training"]
 
 	def addTrainOp(self, loss):
-		self.train_op = tf.train.AdamOptimizer(learning_rate=self.inputs["lr"]).minimize(loss)
+		self.train_op = tf.compat.v1.train.AdamOptimizer(learning_rate=self.inputs["lr"]).minimize(loss)
 		self.addOp("train_op", self.train_op)
 
 	def addOp(self, name, tensor):
@@ -30,8 +30,8 @@ class ModelFramework():
 
 	def init(self, sess):
 		self.sess = sess
-		self.sess.run(tf.global_variables_initializer())
-		self.saver = tf.train.Saver(max_to_keep=5)
+		self.sess.run(tf.compat.v1.global_variables_initializer())
+		self.saver = tf.compat.v1.train.Saver(max_to_keep=5)
 
 	def saveModel(self, path):
 		self.saver.save(self.sess, path)

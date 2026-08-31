@@ -25,7 +25,8 @@ class Train(TrainingFramework):
 		self.batch_size = 4		# dky - original: 8
 		self.datafolder = "../dataset_training"
 		self.training_range = []
-		dataset_split = json.load(open("../split_all.json"))
+		#dataset_split = json.load(open("../split_all.json"))
+		dataset_split = json.load(open("../split_all_without_bad_data.json"))		# dky: test run - 6 splits
 
 		for tid in dataset_split["training"]:
 			for i in range(9):

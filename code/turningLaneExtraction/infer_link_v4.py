@@ -23,7 +23,7 @@ from segtograph.segtographfunc import segtograph
 def seg2link(seg, p1, p2):
 	p1 = (p1[1], p1[0])
 	p2 = (p2[1], p2[0])
-	#print(p1,p2)
+	print(f">>> p1:{p1}, p2:{p2}")
 	graph = segtograph((seg * 255).astype(np.uint8), 32, 0, 0, 32)
 	print(f">>> graph: {graph}")
 
@@ -220,12 +220,15 @@ print(f">>> found {len(pairs)} pairs")
 batchsize = 8
 
 
-modelpath = "../turningLaneValidation/model_turningLaneValidation_run1_640_resnet34_500epseg/model220800"		# dky: WHY?????
+#ORIG: --> modelpath = "../turningLaneValidation/model_turningLaneValidation_run1_640_resnet34_500epseg/model220800"		# dky: WHY?????
+#modelpath = "../turningLaneValidation/model_turningLaneValidation_run1_640_resnet34_500epseg/model1000"
+modelpath = "./model_turningLaneExtraction_640_resnet34_seg-20260824-1103/model282"
 gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
 sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options))
 #model = LinkModel_valid(sess, 640, batchsize=batchsize)		# dky: LinkModel_valid does not exist; unable to locate any references to this
 model = LinkModel(sess, 640, batchsize=batchsize)
 
+print(f">>> infer_link_v4 model.restoreModel({modelpath})")
 model.restoreModel(modelpath)
 
 image_size = cnninput
@@ -284,7 +287,6 @@ for i in range(0, len(pairs), batchsize):
 			connector_batch[j,:,:,6] = -0.5
 
 
-
 	ret =  model.infer(x_in=image_batch, x_connector=connector_batch, context=direction_batch)
 	for j in range(batchsize):
 		if i + j < len(pairs):
@@ -322,12 +324,13 @@ print(f">>> Found {counter} links")
 tf.reset_default_graph()
 model.sess.close()
 # with open('./save.json','w') as jf:
-# 	json.dump(results,jf)
+# 	json.dump(results, jf)
 
-modelpath="./model_turningLaneExtraction_640_resnet34_poscodev3_v0seg/model110400"
-gpu_options = tf.GPUOptions(allow_growth=True)
-sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
-model = LinkModel(sess, 640, batchsize=1)
+#modelpath = "./model_turningLaneExtraction_640_resnet34_poscodev3_v0seg/model110400"
+modelpath = "model_turningLaneExtraction_640_resnet34_seg-20260821-0903/model1487"
+gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
+sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options))
+model = LinkModel(sess, 640, batchsize=4)
 model.restoreModel(modelpath)
 
 links = []

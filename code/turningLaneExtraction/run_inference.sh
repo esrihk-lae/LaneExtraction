@@ -8,7 +8,8 @@
 # rewritten in bash
 
 
-for i in 0 5 6 11 12 17 18 22 25 28 31; do
+#for i in 0 5 6 11 12 17 18 22 25 28 31; do
+for i in 0 5 6; do
 
     inputfile="../../dataset/sat_${i}.jpg"
     outputfolder="./output/${i}"
@@ -20,18 +21,22 @@ for i in 0 5 6 11 12 17 18 22 25 28 31; do
     mkdir -vp "${outputfolder}"
 
     # copy or replace the sdmap file into the expected filename format; overwrite if necessary
-    cp -fv "validation_laneExtraction_run1_640_resnet34v3_500ep/sdmap${i}.jpg" "../../dataset/sdmap_${i}.jpg"
+    cp -fv "../laneAndDirectionExtraction/validation_laneExtraction_run1_640_resnet34v3_500ep/sdmap${i}.jpg" "../../dataset/sdmap_${i}.jpg"
+    cp -fv "../laneAndDirectionExtraction/output/${i}/direction.png" "${outputfolder}/"
+    cp -fv "../laneAndDirectionExtraction/output/${i}/seg.png" "${outputfolder}/"
+    cp -fv "../laneAndDirectionExtraction/output/${i}/graph.p" "${outputfolder}/"
+    cp -fv "../laneAndDirectionExtraction/output/${i}/ways.json" "${outputfolder}/"
 
     echo "run inference for the first stage and extract the graph"
     #python3 infer.py "${inputfile}" "${outputfolder}" "${model}" ; echo ""
     python infer_link_v4.py "$inputfile" "$outputfolder/direction.png" "$outputfolder/graph.p" "$outputfolder"
 
     echo "Turning segmentation to graph"
-    python3 segtograph/setograph.py "${outputfolder}/seg.png" 64 "${outputfolder}/graph.p" ; echo ""
+    python3 segtograph/segtograph.py "${outputfolder}/seg.png" 64 "${outputfolder}/graph.p" ; echo ""
 
 
     echo "extract directions and create ways.json file"
-    python3 infer_direction.py "${outputfolder}/direction.png" "${outputfolder}/graph.p" "${outputfolder}" ; echo ""
+    #python3 infer_direction.py "${outputfolder}/direction.png" "${outputfolder}/graph.p" "${outputfolder}" ; echo ""
 
     rm -fv "../../dataset/sdmap_${i}.jpg" ; echo ""
 

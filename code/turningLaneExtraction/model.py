@@ -138,5 +138,6 @@ class LinkModel():
 		self.saver.save(self.sess, path)
 
 	def restoreModel(self, path):
+		print(f">>> restoreModel({path})")
 		self.saver.restore(self.sess, path)
 
