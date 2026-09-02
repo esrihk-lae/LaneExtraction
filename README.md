@@ -1,5 +1,6 @@
-This is a custom internal-use version of the Lane-Level Street Map Extraction project. 
-Not intended for external use. 
+This is a custom internal-use version of the Lane-Level Street Map Extraction project.
+
+Not intended for external use.
 
 
 
@@ -10,23 +11,23 @@ Digital maps with lane-level details are the foundation of many applications. Ho
 
 ## Environment
 
-The code should be able to run in the following (or a compatible) environment.
+This code has been re-adapted and tuned to run on the following:
 
-Python versions: Python 2.7.12 (python) and Python 3.5.2 (python3).
+- Ubuntu Linux 24.04 (not wsl)
+- Python versions: Python 3.5.2 to 3.8
+- Tensorflow version: 1.15.0 (gpu strongly preferred)
+- CUDA version: 10.0
+- CUDNN version: 7
+- NVIDIA driver version: 418.165.02
 
-Python 2 Tensorflow version: 1.15.0
+See setup-env.sh for environment setup details.
 
-CUDA version: 10.0
-
-CUDNN version: 7
-
-NVIDIA driver version: 418.165.02
-
+For small scale work, refer to setup-env.sh and use the 'tensorflow:20.12-tf1-py3' container available from nvcr.io
 
 
 ## View the dataset and annotate new images
 
-Please check the instructions in [code/hdmapeditor](code/hdmapeditor). 
+Please check the instructions in [code/hdmapeditor](code/hdmapeditor).
 
 ## Create training data
 
@@ -43,7 +44,7 @@ Train the lane-and-direction extraction model.
 
 ```bash
 cd code/laneAndDirectionExtraction
-python train.py resnet34v3
+python3 train.py resnet34v3
 ```
 
 Train the turning lane validation model.
@@ -60,8 +61,16 @@ cd code/turningLaneExtraction
 python3 train.py
 ```
 
-## Inference and Evaluation
 
-This part is not done yet. However, there is some untested code in the code_for_reference_untested folder which might be useful. 
+### Testing
+1. 
+```
+cd laneAndDirectionExtraction
+./run_inference.sh
+```
 
-
+2. 
+```
+cd turningLaneExtraction
+./run_inference.sh
+```
