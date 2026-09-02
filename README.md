@@ -40,21 +40,21 @@ python3 create_training_data.py
 
 ## Training
 
-Train the lane-and-direction extraction model.
+Train the lane-and-direction extraction model:
 
 ```bash
 cd code/laneAndDirectionExtraction
 python3 train.py resnet34v3
 ```
 
-Train the turning lane validation model.
+Train the turning lane validation model:
 
 ```bash
 cd code/turningLaneValidation
 python3 train.py
 ```
 
-Train the turning lane extraction model.
+Train the turning lane extraction model:
 
 ```bash
 cd code/turningLaneExtraction
@@ -63,14 +63,14 @@ python3 train.py
 
 
 ### Testing
-1. 
-```
-cd laneAndDirectionExtraction
+
+```bash
+cd code/laneAndDirectionExtraction
 ./run_inference.sh
 ```
 
-2. 
-```
-cd turningLaneExtraction
+
+```bash
+cd code/turningLaneExtraction
 ./run_inference.sh
 ```
