@@ -74,3 +74,8 @@ cd code/laneAndDirectionExtraction
 cd code/turningLaneExtraction
 ./run_inference.sh
 ```
+
+
+
+### Random notes
+[https://medium.com/@milad.4274/conclusion-graph-simplification-in-openstreetmap-is-a-crucial-preprocessing-step-for-network-analys-815e473b0d9f](OpenStreetMap Graph Simplification: A Deep Dive)
