@@ -1,16 +1,14 @@
-#import rdp
-# Code Copied From Favyen
+import os
+import sys
+from math import sqrt
 
+import numpy as np
 import scipy.ndimage
 from scipy.ndimage.filters import gaussian_filter
 import skimage.morphology
 import imageio.v2 as imageio
-import os
-import numpy
 from multiprocessing import Pool
-from math import sqrt
 
-import sys
 sys.path.append(os.path.dirname(sys.path[0]))
 
 from .postprocessing import graph_refine, connectDeadEnds, downsample
@@ -64,7 +62,7 @@ def segtograph(in_fname, threshold, isolated_thr = 32, spur_thr = 0, deadend_thr
         print(f">>> Warning: bad shape {im.shape}, using first channel only")               # dky: f-strings
         im = im[:, :, 0]
 
-    im = numpy.swapaxes(im, 0, 1)
+    im = np.swapaxes(im, 0, 1)
     im = gaussian_filter(im, sigma=3)
 
     #Image.fromarray(im).save("seg2graphdebugstep1.png")
@@ -96,7 +94,7 @@ def segtograph(in_fname, threshold, isolated_thr = 32, spur_thr = 0, deadend_thr
             if len(point_to_neighbors[(i, j)]) == 0:
                 del point_to_neighbors[(i, j)]
         else:
-            w = numpy.where(im > 0)
+            w = np.where(im > 0)
             if len(w[0]) == 0:
                 break
             i, j = w[0][0], w[1][0]

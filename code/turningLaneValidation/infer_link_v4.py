@@ -23,7 +23,7 @@ def seg2link(seg, p1, p2):
 	p2 = (p2[1], p2[0])
 	#print(p1,p2)
 	graph = segtograph((seg * 255).astype(np.uint8), 32, 0, 0, 32)
-	print(f">>> graph: {graph}")
+	#print(f">>> graph: {graph}")	# dky: debug
 
 	if len(graph) == 0:
 		return False, None
@@ -149,11 +149,9 @@ with open(sys.argv[3], "rb") as f:
     inputgraph = pickle.load(f)
 
 outputfolder = sys.argv[4]
-
 outputfolder_details = sys.argv[4] + "/details/"
 
 ways = json.load(open(outputfolder + "/ways.json", "r"))
-
 
 cnninput = 640
 
@@ -162,7 +160,6 @@ os.makedirs(outputfolder, exist_ok=True)
 
 # Popen("mkdir -p " + outputfolder_details, shell=True).wait()
 os.makedirs(outputfolder_details, exist_ok=True)
-
 
 margin = cnninput // 2
 
@@ -185,7 +182,6 @@ endpoints = []
 for nid, nei in inputgraph.items():
 	if len(nei) == 1:
 		endpoints.append(nid)
-print(f">>> found {len(endpoints)} endpoints")
 
 starting_nodes = set()
 ending_nodes = set()
@@ -211,7 +207,7 @@ for i in range(len(endpoints)):
 				if d <= r:
 					pairs.append((nid1, nid2))
 
-print(f">>> found {len(pairs)} pairs")
+#print(f">>> found {len(pairs)} pairs")
 
 # dky: NOTE - batchsize ???
 batchsize = 8
@@ -315,7 +311,7 @@ for i in range(0,len(pairs), batchsize):
 
 
 
-print(f">>> Found {counter} links")
+#print(f">>> Found {counter} links")
 
 tf.reset_default_graph()
 model.sess.close()

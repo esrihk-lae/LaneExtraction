@@ -1,11 +1,11 @@
-from datetime import datetime
-import math
-from decimal import Decimal
-import json
 import os
 import sys
-sys.path.append(os.path.dirname(sys.path[0]))
+import json
+import math
+from datetime import datetime
+#from decimal import Decimal
 
+sys.path.append(os.path.dirname(sys.path[0]))
 
 from PIL import Image				# pyright: ignore[reportMissingImports]
 import numpy as np					# pyright: ignore[reportMissingImports]
@@ -23,7 +23,7 @@ class Train(TrainingFramework):
 	def __init__(self, mode="seg"):
 		self.mode = mode
 		self.image_size = 640
-		self.batch_size = 1						# dky - original: 8, unofficial sets this to 1
+		self.batch_size = 2						# dky - original: 8, unofficial sets this to 1
 		self.datafolder = "../dataset_training"
 		self.training_range = []
 		dataset_split = json.load(open("../split_all.json"))
@@ -77,7 +77,7 @@ class Train(TrainingFramework):
 	# placeholder methods
 	def getLoss(self, result):
 		if math.isnan(result[0]):
-			print(f"ERROR: loss is nan ...")
+			print(f">> ERROR: loss is nan ...")
 			exit()
 
 		self.logvalue("segloss", result[1])
@@ -200,10 +200,14 @@ if __name__ == "__main__":
 	config["step_init"] = 0
 	config["step_max"] = epochsisze * 500 + 1
 	config["use_validation"] = False
-	config["logfile"] = "log_%s.json" % trainer.instance
+	#config["logfile"] = "log_%s.json" % trainer.instance
+	config["logfile"] = f"log_{trainer.instance}.json"
 
-	try:
-		trainer.run(config)
-	finally:
-		if hasattr(trainer, 'dataloader') and hasattr(trainer.dataloader, 'stop'):
-			trainer.dataloader.stop()
+	# try:
+	# 	trainer.run(config)
+	# finally:
+	# 	if hasattr(trainer, 'dataloader') and hasattr(trainer.dataloader, 'stop'):
+	# 		trainer.dataloader.stop()
+
+	trainer.run(config)
+

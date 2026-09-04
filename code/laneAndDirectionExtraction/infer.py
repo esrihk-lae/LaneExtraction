@@ -1,9 +1,10 @@
+import os
 import sys
+#from subprocess import Popen
 
+import numpy as np
 from PIL import Image
 import imageio.v3 as imageio
-import numpy as np
-from subprocess import Popen
 import tensorflow as tf
 #import scipy.ndimage
 
@@ -16,14 +17,12 @@ backbone = sys.argv[3]
 windowsize1 = 256
 windowsize2 = 512									# dky: test - per error: could not broadcast input array from shape (640,512) into shape (640,640)
 #windowsize2 = 640
-#cnninput = 512
 cnninput = 640		#orig
-
 
 margin = (cnninput - windowsize1) // 2
 margin2 = (cnninput - windowsize2) // 2
 
-Popen("mkdir -p " + outputfolder, shell=True).wait()
+os.makedirs(outputfolder, exist_ok=True)
 
 #img = scipy.ndimage.imread(inputfile)				# dky: orig
 img = imageio.imread(inputfile, mode='RGB')			# dky: change to imageio, read as RGB?
@@ -52,7 +51,6 @@ for i in range((windowsize2 - windowsize1) // 2 ):
 	r = i / float((windowsize2 - windowsize1) // 2)
 	mask[margin2+i:-(margin2+i-1),margin2+i:-(margin2+i-1),:] = r
 
-
 output = np.zeros_like(img)
 weights = np.zeros_like(img) + 0.0001
 
@@ -67,9 +65,9 @@ with tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_option
 	x_in = np.zeros((1, cnninput, cnninput, 3))
 	x_in2 = np.zeros((1, cnninput, cnninput, 1))
 
-
 	for model_ep in [499]:
 		if backbone == "resnet34v3":
+			#model_laneExtraction_run1_640_resnet34v3_500ep
 			#model.restoreModel("model_4cities_run2_640_%s_500ep/model%d" % (backbone, model_ep))
 			#model_laneExtraction_run1_640_resnet34v3_500ep
 			model.restoreModel("./model_laneExtraction_run1_640_%s_500ep/model%d.0" % (backbone, model_ep))

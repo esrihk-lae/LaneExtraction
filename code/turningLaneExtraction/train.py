@@ -1,11 +1,11 @@
-from datetime import datetime
-import math
-from decimal import Decimal
-import json
 import os
 import sys
-sys.path.append(os.path.dirname(sys.path[0]))
+from datetime import datetime
+import math
+#from decimal import Decimal
+import json
 
+sys.path.append(os.path.dirname(sys.path[0]))
 
 from PIL import Image  	# pyright: ignore[reportMissingImports]
 import numpy as np		# pyright: ignore[reportMissingImports]
@@ -42,7 +42,6 @@ class Train(TrainingFramework):
 
 		self.counter = 0
 		self.disloss = 0
-
 		self.epochsize = len(self.training_range) * 2048 * 2048 / (self.batch_size * self.image_size * self.image_size)
 
 		pass

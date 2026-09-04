@@ -1,23 +1,21 @@
-#import rdp
-# Code Copied From Favyen
-
-from scipy.ndimage.filters import gaussian_filter
-import skimage.morphology
-import os
-from PIL import Image
-#import math
-import numpy as np
-#from multiprocessing import Pool
-#import subprocess
-from math import sqrt
-import pickle
-from .postprocessing import graph_refine, connectDeadEnds, downsample
-import cv2
-from douglasPeucker import simpilfyGraph
-
 import os
 import sys
+#import math
+from math import sqrt
+#from multiprocessing import Pool
+#import subprocess
+
+import numpy as np
+import cv2
+import pickle
+from scipy.ndimage.filters import gaussian_filter
+import skimage.morphology
+from PIL import Image
+
 sys.path.append(os.path.dirname(sys.path[0]))
+
+from .postprocessing import graph_refine, connectDeadEnds, downsample
+from douglasPeucker import simpilfyGraph
 
 from osm.graph_ops import graphDensifyPixel
 
@@ -67,7 +65,7 @@ im = scipy.ndimage.imread(in_fname)
 if len(im.shape) == 3:
 	print(f"warning: bad shape {im.shape}, using first channel only")
 	im = im[:, :, 0]
-im = numpy.swapaxes(im, 0, 1)
+im = np.swapaxes(im, 0, 1)
 
 
 # some refinement
@@ -104,12 +102,12 @@ im = im >= threshold
 
 #im = im >= threshold
 
-#bigim = numpy.zeros((im.shape[0] + 2*PADDING, im.shape[1] + 2*PADDING), dtype='bool')
+#bigim = np.zeros((im.shape[0] + 2*PADDING, im.shape[1] + 2*PADDING), dtype='bool')
 #bigim[PADDING:PADDING+im.shape[0], PADDING:PADDING+im.shape[1]] = im
-#bigim[0:PADDING, PADDING:PADDING+im.shape[1]] = numpy.tile(im[0:1, :], [PADDING, 1])
-#bigim[-PADDING:, PADDING:PADDING+im.shape[1]] = numpy.tile(im[-1:, :], [PADDING, 1])
-#bigim[PADDING:PADDING+im.shape[1], 0:PADDING] = numpy.tile(im[:, 0:1], [1, PADDING])
-#bigim[PADDING:PADDING+im.shape[1], -PADDING:] = numpy.tile(im[0, -1:], [1, PADDING])
+#bigim[0:PADDING, PADDING:PADDING+im.shape[1]] = np.tile(im[0:1, :], [PADDING, 1])
+#bigim[-PADDING:, PADDING:PADDING+im.shape[1]] = np.tile(im[-1:, :], [PADDING, 1])
+#bigim[PADDING:PADDING+im.shape[1], 0:PADDING] = np.tile(im[:, 0:1], [1, PADDING])
+#bigim[PADDING:PADDING+im.shape[1], -PADDING:] = np.tile(im[0, -1:], [1, PADDING])
 #im = bigim
 
 # apply morphological dilation and thinning
@@ -139,7 +137,7 @@ while True:
 		if len(point_to_neighbors[(i, j)]) == 0:
 			del point_to_neighbors[(i, j)]
 	else:
-		w = numpy.where(im > 0)
+		w = np.where(im > 0)
 		if len(w[0]) == 0:
 			break
 		i, j = w[0][0], w[1][0]

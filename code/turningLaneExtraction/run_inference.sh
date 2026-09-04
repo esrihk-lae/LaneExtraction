@@ -8,8 +8,7 @@
 # rewritten in bash
 
 
-#for i in 0 5 6 11 12 17 18 22 25 28 31; do
-for i in 0 5 6; do
+for i in 0 5 6 11 12 17 18 22 25 28 31; do
 
     inputfile="../../dataset/sat_${i}.jpg"
     outputfolder="./output/${i}"

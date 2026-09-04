@@ -1,11 +1,12 @@
-
 import os
 import sys
-sys.path.append(os.path.dirname(sys.path[0]))
-sys.path.append("../cnnmodels")
 import json
 import math
+from datetime import datetime
 #from decimal import Decimal
+
+sys.path.append(os.path.dirname(sys.path[0]))
+sys.path.append("../cnnmodels")
 
 from PIL import Image			# pyright: ignore[reportMissingImports]
 import numpy as np  			# pyright: ignore[reportMissingImports]
@@ -144,6 +145,9 @@ class Train(TrainingFramework):
 
 
 if __name__ == "__main__":
+	now = datetime.now()
+	timestamp = now.strftime("%Y%m%d-%H%M")
+
 	trainer = Train()
 	epochsisze = trainer.epochsize
 

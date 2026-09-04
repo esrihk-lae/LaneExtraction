@@ -1,15 +1,11 @@
-# Derek Yuen
-# 2026-08
-
-import math
 import os
 import sys
+import math
+
 sys.path.append(os.path.dirname(sys.path[0]))
 
 import imageio.v2 as imageio
-from PIL import Image
 import numpy as np
-#from subprocess import Popen       # dky: unused import
 #import tensorflow as tf            # dky: unused import
 #import scipy.ndimage
 import pickle

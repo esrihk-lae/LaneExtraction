@@ -8,8 +8,8 @@ def graph_refine(graph, isolated_thr = 50 * 3, spurs_thr = 20 * 3, three_edge_lo
 
 	for k, v in neighbors.items():
 		if k not in grouping:
-			# start a search
 
+			# start a search
 			queue = [k]
 
 			while len(queue) > 0:
@@ -34,7 +34,6 @@ def graph_refine(graph, isolated_thr = 50 * 3, spurs_thr = 20 * 3, three_edge_lo
 		for nei in neighbors[k]:
 			a = k[0] - nei[0]
 			b = k[1] - nei[1]
-
 			d = np.sqrt(a*a + b*b)
 
 			group_count[v] = (group_count[v][0], group_count[v][1] + d/2)
@@ -46,7 +45,6 @@ def graph_refine(graph, isolated_thr = 50 * 3, spurs_thr = 20 * 3, three_edge_lo
 			if len(neighbors[v[0]]) >= 3:
 				a = k[0] - v[0][0]
 				b = k[1] - v[0][1]
-
 				d = np.sqrt(a*a + b*b)
 
 				if d < spurs_thr:
@@ -56,6 +54,7 @@ def graph_refine(graph, isolated_thr = 50 * 3, spurs_thr = 20 * 3, three_edge_lo
 	remove_list2 = []
 	remove_counter = 0
 	new_neighbors = {}
+
 
 	def isRemoved(k):
 		gid = grouping[k]

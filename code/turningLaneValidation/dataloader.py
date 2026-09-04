@@ -1,15 +1,17 @@
-from time import time
-import random
-import json
 import math
+import json
+import random
+from time import time
+import threading
 
 import numpy as np				# pyright: ignore[reportMissingImports]
-import threading
 import imageio.v2 as imageio	# dky: replacement for scipy.ndimage.imread which is deprecated
 import scipy.ndimage			# pyright: ignore[reportMissingImports]
 import cv2						# pyright: ignore[reportMissingImports]
 
+
 global_lock = threading.Lock()
+
 
 def rotate(pos, angle, size):
 	x = pos[0] - int(size/2)
@@ -19,7 +21,6 @@ def rotate(pos, angle, size):
 	new_y = x * math.sin(math.radians(angle)) + y * math.cos(math.radians(angle))
 
 	return (int(new_x + int(size/2)), int(new_y + int(size/2)))
-
 
 
 class Dataloader():
@@ -72,6 +73,7 @@ class Dataloader():
 				links = json.load(open(self.folder + "/link%s.json" % ind))
 
 				if len(links[2]) == 0:
+					#print(f">> len(links[2]) == 0, ind: {ind}, links: {links}") # dky: debug
 					continue
 
 				#sat_img = scipy.ndimage.imread(self.folder+"/sat%s.jpg" % ind)
@@ -82,7 +84,6 @@ class Dataloader():
 
 				#target = scipy.ndimage.imread(self.folder+"/lane%s.jpg" % ind)
 				target = imageio.imread(self.folder + "/lane%s.jpg" % ind)
-
 
 				#target_t = scipy.ndimage.imread(self.folder+"/terminal%s.jpg" % ind)
 				#target_t = imageio.imread(self.folder+"/terminal%s.jpg" % ind)
@@ -155,8 +156,9 @@ class Dataloader():
 				pos2nid = {}
 
 				# dky: py3 - may need to change this to:
-				#for k in links[1].keys():
-				for k in links[1].keys():
+				#for k in links[1].keys():		# dky: orig
+				#print(f">> links[1].keys(): {links[1].keys()}")	# dky: debug
+				for k in list(links[1].keys()):		# dky: dict.keys() returns a view object, which is not subscriptable. Convert to list to iterate over keys.
 					pos = links[1][k]
 					pos2nid[(pos[0], pos[1])] = k
 
@@ -185,7 +187,6 @@ class Dataloader():
 						print(f"end: {pos2nid.keys()}")
 						exit()
 
-
 				normal = (normal.astype(np.float) - 127) / 127.0
 				normal = normal[:,:,1:3] # cv2 is BGR scipy and Image PIL are RGB
 
@@ -197,8 +198,6 @@ class Dataloader():
 
 				normal[:,:,0] = new_normal_x
 				normal[:,:,1] = new_normal_y
-
-
 
 				sat_img = sat_img.astype(np.float) / 255.0 - 0.5
 				mask = mask.astype(np.float) / 255.0
@@ -217,7 +216,6 @@ class Dataloader():
 				if self.testing == False:
 					self.images[i,:,:,:] = self.images[i,:,:,:] * (0.8 + 0.2 * random.random()) - (random.random() * 0.4 - 0.2)
 					self.images[i,:,:,:] = np.clip(self.images[i,:,:,:], -0.5, 0.5)
-
 					self.images[i,:,:,0] = self.images[i,:,:,0] * (0.8 + 0.2 * random.random())
 					self.images[i,:,:,1] = self.images[i,:,:,1] * (0.8 + 0.2 * random.random())
 					self.images[i,:,:,2] = self.images[i,:,:,2] * (0.8 + 0.2 * random.random())
@@ -225,6 +223,7 @@ class Dataloader():
 				break
 
 		self.getBatchInternal(self.maxbatchsize)
+
 
 	def getBatchInternal(self, batchsize):
 		#print(f">>> getBatchInternal(): {batchsize}")
@@ -276,7 +275,6 @@ class Dataloader():
 					connector1 = connector1 * 0
 					connector2 = connector2 * 0
 
-
 					#st = random.randint(st-1,st+1)
 					#ed = random.randint(ed-1,ed+1)
 
@@ -314,7 +312,6 @@ class Dataloader():
 					#connectorlink *= 0
 					#cv2.line(connectorlink, (x1,y1), (x2,y2), (255),8)
 
-
 					self.target_batch[i,:,:,0] = np.copy(img) / 255.0
 
 					self.connector_batch[i,:,:,0] = np.copy(connector1) / 255.0 - 0.5
@@ -333,10 +330,7 @@ class Dataloader():
 					#self.target_t_batch[i,:,:,0] = self.targets_t[tile_id, sr:sr+self.image_size, sc:sc+self.image_size, 0]
 					self.normal_batch[i,:,:,:] = self.normal[tile_id, sr:sr+self.image_size, sc:sc+self.image_size, :]
 
-
 					# draw two segmentations
-
-
 					nid1 = self.pos2nid[tile_id][(vertices[0][0],vertices[0][1])]
 					nid2 = self.pos2nid[tile_id][(vertices[-1][0],vertices[-1][1])]
 
@@ -365,8 +359,6 @@ class Dataloader():
 							cv2.line(img, (x1_,y1_), (x2_,y2_), (255), 5)
 
 					self.target_batch[i,:,:,2] = np.copy(img) / 255.0
-
-
 
 				else:
 					nodes_key_list = list(nodes.keys())
@@ -415,7 +407,6 @@ class Dataloader():
 					if sc + self.image_size >= self.datasetImageSize:
 						sc = self.datasetImageSize - self.image_size
 
-
 					img = img * 0
 					connector1 = connector1 * 0
 					connector2 = connector2 * 0
@@ -441,8 +432,6 @@ class Dataloader():
 					self.connector_batch[i,:,:,4:6] = self.poscode[self.image_size - y2:self.image_size*2 - y2, self.image_size - x2:self.image_size*2 - x2, :]
 					self.connector_batch[i,:,:,6] = np.copy(connectorlink) / 255.0 - 0.5
 
-
-
 					self.target_batch[i,:,:,0] = np.copy(img) / 255.0
 					#self.connector_batch[i,:,:,0] = np.copy(connector) / 255.0
 					self.target_label_batch[i,0] = 0
@@ -450,7 +439,6 @@ class Dataloader():
 					self.image_batch[i,:,:,:] = self.images[tile_id, sr:sr+self.image_size, sc:sc+self.image_size, :]
 					#self.target_t_batch[i,:,:,0] = self.targets_t[tile_id, sr:sr+self.image_size, sc:sc+self.image_size, 0]
 					self.normal_batch[i,:,:,:] = self.normal[tile_id, sr:sr+self.image_size, sc:sc+self.image_size, :]
-
 
 					#nid1 = self.pos2nid[tile_id][(vertices[0][0],vertices[0][1])]
 					#nid2 = self.pos2nid[tile_id][(vertices[-1][0],vertices[-1][1])]
@@ -483,14 +471,14 @@ class Dataloader():
 				#print("we reach here")
 				break
 
-		#print("getting batch done")
+		#print(">>> getting batch done")
 		return self.image_batch[:batchsize, :,:,:], self.connector_batch[:batchsize,:,:,:], self.target_batch[:batchsize, :,:,:], self.target_label_batch[:batchsize,:], self.normal_batch[:batchsize,:,:,:]
+
 
 	def getBatch(self, batchsize):
 		st = random.randint(0, self.maxbatchsize - batchsize - 1)
 
 		return self.image_batch[st:st+batchsize, :,:,:], self.connector_batch[st:st+batchsize,:,:,:], self.target_batch[st:st+batchsize, :,:,:], self.target_label_batch[st:st+batchsize,:], self.normal_batch[st:st+batchsize,:,:,:]
-
 
 
 class ParallelDataLoader():
@@ -502,7 +490,6 @@ class ParallelDataLoader():
 		self.current_loader_id = 0
 		self.stop_event = threading.Event()
 		self.threads = []
-
 
 		for i in range(self.n):
 			self.subloader.append(Dataloader(*args, **kwargs))
@@ -538,6 +525,7 @@ class ParallelDataLoader():
 
 			c = c + 1
 
+
 	def stop(self):
 		self.stop_event.set()
 		for event in self.subloaderWaitEvent:
@@ -558,6 +546,8 @@ class ParallelDataLoader():
 
 	def getBatch(self,batch_size):
 		return self.subloader[self.current_loader_id].getBatch(batch_size)
+
+
 	def current(self):
 		return self.subloader[self.current_loader_id]
 

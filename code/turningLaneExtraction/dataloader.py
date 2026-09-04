@@ -2,14 +2,13 @@
 import json
 import math
 from time import time
+import threading
 
 import numpy as np 		# pyright: ignore[reportMissingImports]
-import threading
+import cv2
 import imageio.v2 as imageio
-
 import scipy.ndimage
 import random
-import cv2
 
 global_lock = threading.Lock()
 
@@ -163,7 +162,6 @@ class Dataloader():
 
 				normal[:,:,0] = new_normal_x
 				normal[:,:,1] = new_normal_y
-
 
 
 				sat_img = sat_img.astype(np.float) / 255.0 - 0.5
@@ -356,7 +354,6 @@ class Dataloader():
 
 					#connectorlink *= 0
 					#cv2.line(connectorlink, (x1,y1), (x2,y2), (255),8)
-
 
 					self.connector_batch[i,:,:,0] = np.copy(connector1) / 255.0 - 0.5
 					self.connector_batch[i,:,:,3] = np.copy(connector2) / 255.0 - 0.5

@@ -1,28 +1,29 @@
 #import rdp
-# Code Copied From Favyen
 
+import math
+import os
+import pickle
+#import subprocess
+import sys
+
+from multiprocessing import Pool
+from math import sqrt
+
+import cv2
 import imageio.v2 as imageio # pyright: ignore[reportMissingImports]
+import numpy as np
 import scipy.ndimage
 #from scipy.ndimage.filters import gaussian_filter
+import skimage.morphology
+
+from PIL import Image
 from scipy.ndimage import gaussian_filter
 
-import skimage.morphology
-from PIL import Image
-import math
-#import numpy
-import numpy as np
-from multiprocessing import Pool
-import subprocess
-import sys
-from math import sqrt
-import pickle
-from postprocessing import graph_refine, connectDeadEnds, downsample
-import cv2
-from douglasPeucker import simpilfyGraph
-
-import os
-import sys
+# for local modules
 sys.path.append(os.path.dirname(sys.path[0]))
+
+from postprocessing import graph_refine, connectDeadEnds, downsample
+from douglasPeucker import simpilfyGraph
 
 #from osm.graph_ops import graphDensifyPixel  # dky: ???
 

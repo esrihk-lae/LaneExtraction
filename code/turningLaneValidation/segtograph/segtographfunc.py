@@ -1,24 +1,23 @@
-#import rdp
-# Code Copied From Favyen
+import os
+import sys
+from math import sqrt
+#from multiprocessing import Pool
 
+import numpy as np
 import scipy.ndimage
 from scipy.ndimage.filters import gaussian_filter
 import skimage.morphology
-import os
-import numpy
-from multiprocessing import Pool
-import sys
-from math import sqrt
+# from osm.graph_ops import graphDensifyPixel
+
+sys.path.append(os.path.dirname(sys.path[0]))
+
 from .postprocessing import graph_refine, connectDeadEnds, downsample
 #from .douglasPeucker import simpilfyGraph
 
-import os
-import sys
-sys.path.append(os.path.dirname(sys.path[0]))
 
-# from osm.graph_ops import graphDensifyPixel
 def distance(a, b):
     return  sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
+
 
 def point_line_distance(point, start, end):
     if (start == end):
@@ -31,6 +30,7 @@ def point_line_distance(point, start, end):
             (end[0] - start[0]) ** 2 + (end[1] - start[1]) ** 2
         )
         return n / d
+
 
 def rdp(points, epsilon):
     """
@@ -54,7 +54,7 @@ def rdp(points, epsilon):
 def segtograph(in_fname, threshold, isolated_thr = 32, spur_thr = 0, deadend_thr = 16):
     PADDING = 30
 
-    if type(in_fname) == str :
+    if type(in_fname) == str:
         im = scipy.ndimage.imread(in_fname)
     else:
         im = in_fname
@@ -62,7 +62,7 @@ def segtograph(in_fname, threshold, isolated_thr = 32, spur_thr = 0, deadend_thr
     if len(im.shape) == 3:
         print(f"warning: bad shape {im.shape}, using first channel only")
         im = im[:, :, 0]
-    im = numpy.swapaxes(im, 0, 1)
+    im = np.swapaxes(im, 0, 1)
 
     im = gaussian_filter(im, sigma=3)
 
@@ -85,6 +85,7 @@ def segtograph(in_fname, threshold, isolated_thr = 32, spur_thr = 0, deadend_thr
         edges.add((src, dst))
     point_to_neighbors = {}
     q = []
+
     while True:
         if len(q) > 0:
             lastid, i, j = q.pop()
@@ -95,7 +96,7 @@ def segtograph(in_fname, threshold, isolated_thr = 32, spur_thr = 0, deadend_thr
             if len(point_to_neighbors[(i, j)]) == 0:
                 del point_to_neighbors[(i, j)]
         else:
-            w = numpy.where(im > 0)
+            w = np.where(im > 0)
             if len(w[0]) == 0:
                 break
             i, j = w[0][0], w[1][0]
@@ -169,7 +170,6 @@ def segtograph(in_fname, threshold, isolated_thr = 32, spur_thr = 0, deadend_thr
                     neighbors[nk2].append(nk1)
             else:
                 neighbors[nk2] = [nk1]
-
 
     g = graph_refine(neighbors, isolated_thr = isolated_thr, spurs_thr = spur_thr)
     g = connectDeadEnds(g, thr = deadend_thr)

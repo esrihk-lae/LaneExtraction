@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.append(os.path.dirname(sys.path[0]))
 
 
@@ -10,6 +11,7 @@ import tensorflow as tf
 import math
 #import scipy.ndimage			# dky: deprecated due to function being deprecated; replaced with imageio (below)
 import imageio.v2 as imageio
+#import imageio.v3 as imageio	# dky: testing
 import pickle
 import cv2
 import json
@@ -23,9 +25,9 @@ from segtograph.segtographfunc import segtograph
 def seg2link(seg, p1, p2):
 	p1 = (p1[1], p1[0])
 	p2 = (p2[1], p2[0])
-	print(f">>> p1:{p1}, p2:{p2}")
+	#print(f">>> p1:{p1}, p2:{p2}")
 	graph = segtograph((seg * 255).astype(np.uint8), 32, 0, 0, 32)
-	print(f">>> graph: {graph}")
+	#print(f">>> graph: {graph}")
 
 	if len(graph) == 0:
 		return False, None
@@ -58,7 +60,7 @@ def seg2link(seg, p1, p2):
 	if p1nid == p2nid:
 		return False, None
 
-	#print(p1nid, p2nid)
+	#print(f"p1nid: {p1nid}, p2nid:{p2nid}")
 
 	newgraph = {}
 	for nid, nei in graph.items():
@@ -109,7 +111,6 @@ def seg2link(seg, p1, p2):
 		return True, link
 
 	# need intepolation
-
 	link2 = []
 	cur = p2
 
@@ -151,11 +152,11 @@ with open(sys.argv[3], "rb") as f:						# dky: modern safe python
     inputgraph = pickle.load(f)
 
 outputfolder = sys.argv[4]
-
 outputfolder_details = sys.argv[4] + "/details/"
 
-
-ways = json.load(open(outputfolder + "/ways.json", "r"))
+#ways = json.load(open(outputfolder + "/ways.json", "r"))
+with open(f"{outputfolder}/ways.json", "r") as f:
+    ways = json.load(f)
 
 
 cnninput = 640
@@ -221,8 +222,9 @@ batchsize = 8
 
 
 #ORIG: --> modelpath = "../turningLaneValidation/model_turningLaneValidation_run1_640_resnet34_500epseg/model220800"		# dky: WHY?????
-#modelpath = "../turningLaneValidation/model_turningLaneValidation_run1_640_resnet34_500epseg/model1000"
-modelpath = "./model_turningLaneExtraction_640_resnet34_seg-20260824-1103/model282"
+modelpath = "../turningLaneValidation/model_turningLaneValidation_run1_640_resnet34_500epseg/model1000"
+#modelpath = "./model_turningLaneExtraction_640_resnet34_seg-20260824-1103/model282"
+
 gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
 sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options))
 #model = LinkModel_valid(sess, 640, batchsize=batchsize)		# dky: LinkModel_valid does not exist; unable to locate any references to this
@@ -319,7 +321,7 @@ for i in range(0, len(pairs), batchsize):
 
 
 
-print(f">>> Found {counter} links")
+#print(f">>> Found {counter} links")
 
 tf.reset_default_graph()
 model.sess.close()
@@ -385,12 +387,13 @@ for i in range(len(pairs)):
 
 			links.append(newlink)
 
-
 		Image.fromarray((seg[0][0,:,:,0]*255).astype(np.uint8)).save(outputfolder_details+"/seg%d.png" % i)
 		json.dump([ok, newlink], open(outputfolder_details+"/link%d.json" % (i), "w"))
 
 
-print(len(links), failed)
-json.dump(links, open(outputfolder + "/links.json", "w"), indent=2)
+#print(f"Links count: {len(links)}, failed: {failed}")
 
+#json.dump(links, open(outputfolder + "/links.json", "w"), indent=2)
+with open(f"{outputfolder}/links.json", "w") as f:
+    json.dump(links, f, indent=2)
 
