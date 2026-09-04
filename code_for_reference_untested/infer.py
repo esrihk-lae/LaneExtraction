@@ -1,14 +1,14 @@
-import os 
-import sys 
+import os
+import sys
 
-import sys 
+import sys
 
 from model import LaneModel
 
-from PIL import Image 
-import numpy as np 
-from subprocess import Popen 
-import tensorflow as tf 
+from PIL import Image
+import numpy as np
+from subprocess import Popen
+import tensorflow as tf
 import math
 import scipy.ndimage
 
@@ -28,17 +28,17 @@ Popen("mkdir -p " + outputfolder, shell=True).wait()
 img = scipy.ndimage.imread(inputfile)
 sdmap = scipy.ndimage.imread(inputfile.replace("sat", "sdmap"))
 
-img = (img.astype(np.float) / 255.0 - 0.5) * 0.81 
+img = (img.astype(np.float) / 255.0 - 0.5) * 0.81
 sdmap = sdmap.astype(np.float) / 255.0
 dim = np.shape(img)
 
 img = np.pad(img, ((margin, margin),(margin, margin),(0,0)), 'constant')
 sdmap = np.pad(sdmap, ((margin, margin),(margin, margin)), 'constant')
 
-mask = np.zeros((cnninput,cnninput,3)) 
+mask = np.zeros((cnninput,cnninput,3))
 for i in range((windowsize2 - windowsize1) // 2 ):
 	r = i / float((windowsize2 - windowsize1) // 2)
-	mask[margin2+i:-(margin2+i-1),margin2+i:-(margin2+i-1),:] = r 
+	mask[margin2+i:-(margin2+i-1),margin2+i:-(margin2+i-1),:] = r
 
 
 output = np.zeros_like(img)
@@ -54,14 +54,14 @@ with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
 
 	for model_ep in [500]:
 		model.restoreModel("model_4cities_run2_640_%s_500ep/model%d" % (backbone, model_ep))
-		
+
 		for i in range(dim[0] // windowsize1):
 			print(i)
 			for j in range(dim[1] // windowsize1):
-				
+
 				r = i * windowsize1
 				c = j * windowsize1
-				x_in[0,:,:,:] = img[r:r+cnninput, c:c+cnninput,:] 
+				x_in[0,:,:,:] = img[r:r+cnninput, c:c+cnninput,:]
 				x_in2[0,:,:,0] = sdmap[r:r+cnninput, c:c+cnninput]
 
 				x_out = model.infer(x_in)[0]
@@ -69,7 +69,7 @@ with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
 				output[r:r+cnninput, c:c+cnninput,:] += x_out[0,:,:,:] * mask
 				weights[r:r+cnninput, c:c+cnninput,:] += mask[:,:,0:1]
 
-	
+
 	output = np.divide(output, weights)
 
 	output = output[margin:-margin, margin:-margin,:]
@@ -80,8 +80,8 @@ with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
 	direction_img[:,:,2] = np.clip(output[:,:,1],-1,1) * 127 + 127
 	direction_img[:,:,1] = np.clip(output[:,:,2],-1,1) * 127 + 127
 	direction_img[:,:,0] = 127
-	
+
 	Image.fromarray(direction_img.astype(np.uint8) ).save(outputfolder + "/direction.png")
-	
+
 
 

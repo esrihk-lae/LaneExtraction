@@ -1,5 +1,5 @@
-import json 
-import numpy as np 
+import json
+import numpy as np
 
 testing_set = [0,5,6,11,12,17,18,22,25,28,31]
 

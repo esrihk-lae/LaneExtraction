@@ -1,15 +1,15 @@
-import os 
-import sys 
+import os
+import sys
 sys.path.append(os.path.dirname(sys.path[0]))
 
-import sys 
+import sys
 
 from model_way import WayModel
 
-from PIL import Image 
-import numpy as np 
-from subprocess import Popen 
-import tensorflow as tf 
+from PIL import Image
+import numpy as np
+from subprocess import Popen
+import tensorflow as tf
 import math
 import scipy.ndimage
 import pickle
@@ -46,7 +46,7 @@ for nid, nei in inputgraph.items():
                 pass
             else:
                 ways.append(way)
-            
+
             visited.add(k1)
             visited.add(k2)
 
@@ -67,14 +67,14 @@ for way in ways:
             r = int(r1 * a + r2 * (1-a))
             c = int(c1 * a + c2 * (1-a))
 
-            vr += (inputdirection[r,c,1] - 127) / 127.0 
-            vc += (inputdirection[r,c,2] - 127) / 127.0 
-            
+            vr += (inputdirection[r,c,1] - 127) / 127.0
+            vc += (inputdirection[r,c,2] - 127) / 127.0
+
         l = math.sqrt((vr)**2 + (vc)**2)
         vr /= l
         vc /= l
 
-        cdot += dr * vr + dc * vc 
+        cdot += dr * vr + dc * vc
 
 
     if cdot < 0:
@@ -99,9 +99,9 @@ for way in ways:
 
 cv2.imwrite(outputfolder + "/direction_sharp.png", directions)
 
-            
-            
 
-        
-         
+
+
+
+
 

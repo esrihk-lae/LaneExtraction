@@ -1,15 +1,15 @@
-import json 
 import sys
+import json
 
 
 def checkResult(labels, prediction):
-		
-    correct_n = 0 
-    union_n = 0 
-    #intersection_n = 0 
+
+    correct_n = 0
+    union_n = 0
+    #intersection_n = 0
     correct_pos_n = 0
     label_pos_n = 0
-    pred_pos_n = 0 
+    pred_pos_n = 0
 
     for i in range(len(prediction)):
         if prediction[i] == labels[i]:
@@ -25,7 +25,7 @@ def checkResult(labels, prediction):
             pred_pos_n += 1
         if labels[i] == 1:
             label_pos_n += 1
-    
+
     print(correct_n, correct_pos_n, union_n, label_pos_n, pred_pos_n, len(prediction))
 
     print("Accuracy ", float(correct_n) / len(prediction))
@@ -48,12 +48,12 @@ if __name__ == "__main__":
     prediction = []
 
     for tid in testing_set:
-        name = "results/" + tag + "_ret_%d.json" % tid 
+        name = "results/" + tag + "_ret_%d.json" % tid
         data = json.load(open(name, "r"))
         labels = labels + data[0]
         prediction = prediction + data[1]
 
     checkResult(labels, prediction)
 
-    
+
 

@@ -1,7 +1,7 @@
 from eval import Evaluator
-import numpy as np 
-import sys 
-import json 
+import numpy as np
+import sys
+import json
 
 matched_c, prop_c, gt_c = 0, 0, 0
 geo_precisions, geo_recalls = [], []
@@ -16,8 +16,8 @@ for tid in [0,5,6,11,12,17,18,22,25,28,31]:
     else:
         e.loadPropFromGraph("../all_results_%s/%d/graph.p" % (sys.argv[1], tid))
     #e.loadPropFromGraph("../lane_model_sat2graph/result/%d/graph_output.png_graph.p" % tid)
-    
-    geo_p, geo_r, topo_p, topo_r = e.topoMetric(mask = "../dataset_evaluation/regionmask_%d.jpg" % tid)   
+
+    geo_p, geo_r, topo_p, topo_r = e.topoMetric(mask = "../dataset_evaluation/regionmask_%d.jpg" % tid)
 
     geo_precisions.append(geo_p)
     geo_recalls.append(geo_r)
@@ -27,7 +27,6 @@ for tid in [0,5,6,11,12,17,18,22,25,28,31]:
 
 
 # TODO save the result
-
 
 print("geo precision", np.mean(geo_precisions))
 print("geo recall", np.mean(geo_recalls))

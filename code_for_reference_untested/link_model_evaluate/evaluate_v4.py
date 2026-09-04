@@ -1,16 +1,16 @@
-import os 
-import sys 
+import os
+import sys
 sys.path.append(os.path.dirname(os.path.dirname(sys.path[0])))
 
-from PIL import Image 
-import numpy as np 
+from PIL import Image
+import numpy as np
 import scipy.misc
 import scipy.ndimage
-import json 
+import json
 import cv2
 import pickle
-from hdmapeditor.roadstructure import LaneMap 
-from time import time 
+from hdmapeditor.roadstructure import LaneMap
+from time import time
 from segtograph.segtographfunc import segtograph
 import math
 
@@ -33,15 +33,15 @@ if __name__ == "__main__":
 		batch = evaluator.loadbatch(batchsize = 4)
 		if batch[0] == 0:
 			break
-		
+
 		ret = inferEngine.infer(sat = batch[2], connector = batch[3], direction = batch[4])
 		#newbatch3[:,:,:,0:3] = batch[3][:,:,:,3:6]
 		#newbatch3[:,:,:,3:6] = batch[3][:,:,:,0:3]
 		#ret2 = inferEngine.infer(sat = batch[2], connector = newbatch3, direction = batch[4])
-	
-		
 
-		
+
+
+
 		for i in range(batch[0]):
 			#pred = max(ret[i,0], ret2[i,0])
 			pred = ret[i,0]
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 			# direction_img[:,:,0] += batch[3][i,:,:,0] * 255 + 127
 			# direction_img[:,:,1] += batch[3][i,:,:,3] * 255 + 127
 			# direction_img[:,:,2] += batch[3][i,:,:,6] * 255 + 127
-			
+
 			# direction_img = np.clip(direction_img, 0, 255)
 
 			# Image.fromarray(direction_img.astype(np.uint8) ).save("debug/direction%d.jpg" % (cc))

@@ -1,18 +1,19 @@
-import os 
-import sys 
+import os
+import sys
+import math
+from time import time
+
 sys.path.append(os.path.dirname(os.path.dirname(sys.path[0])))
 
-from PIL import Image 
-import numpy as np 
+from PIL import Image
+import numpy as np
 import scipy.misc
 import scipy.ndimage
-import json 
+import json
 import cv2
 import pickle
-from hdmapeditor.roadstructure import LaneMap 
-from time import time 
+from hdmapeditor.roadstructure import LaneMap
 from segtograph.segtographfunc import segtograph
-import math
 
 
 class Evaluator():
@@ -22,7 +23,7 @@ class Evaluator():
 		direction = scipy.ndimage.imread(dataset_folder+"/normal%s.jpg" % tileid)
 		links = json.load(open(dataset_folder+"/link%s.json" % tileid))
 
-		nidmap, nodes, locallinks = links 
+		nidmap, nodes, locallinks = links
 
 		start_nodes = set()
 		end_nodes = set()
@@ -31,7 +32,7 @@ class Evaluator():
 			start_nodes.add(tuple(locallink[0]))
 			end_nodes.add(tuple(locallink[-1]))
 
-			
+
 
 		print("number of terminal nodes", len(nidmap))
 
@@ -48,7 +49,7 @@ class Evaluator():
 					pass
 				else:
 					continue
-				
+
 				r = 70 * 8
 				if (nodes[nid1][0] - nodes[nid2][0])**2 + (nodes[nid1][1] - nodes[nid2][1])**2 < r**2:
 					pairs.append((nid1, nid2))
@@ -63,12 +64,12 @@ class Evaluator():
 		print("number of candidate pairs", len(pairs), np.sum(labels))
 		#exit()
 
-		padding_size = 320 
+		padding_size = 320
 
 		self.sat = np.pad(sat_img, [[padding_size,padding_size],[padding_size,padding_size],[0,0]], 'constant').astype(np.float) / 255.0 - 0.5
 		self.sat = self.sat * 0.81
 		self.mask = np.pad(mask, [[padding_size,padding_size],[padding_size,padding_size],[0,0]], 'constant')
-		
+
 		direction = (direction.astype(np.float) - 127) / 127.0
 		direction = direction[:,:,1:3]
 
@@ -76,22 +77,22 @@ class Evaluator():
 		self.direction[:,:,0] = direction[:,:,1]
 		self.direction[:,:,1] = direction[:,:,0]
 		self.direction = np.pad(self.direction, [[padding_size,padding_size],[padding_size,padding_size],[0,0]], 'constant')
-		
-		self.links = links 
-		self.pairs = pairs 
+
+		self.links = links
+		self.pairs = pairs
 		self.labels = labels
-		self.ptr = 0 
+		self.ptr = 0
 
 		self.dataset_folder = dataset_folder
-		self.tileid = tileid 
-		
-		image_size = 640 
+		self.tileid = tileid
+
+		image_size = 640
 
 		self.maxbatchsize = 32
 		self.image_batch = np.zeros((self.maxbatchsize, image_size, image_size,3))
 		self.direction_batch = np.zeros((self.maxbatchsize, image_size, image_size,2))
 		self.connector_batch = np.zeros((self.maxbatchsize, image_size, image_size,7))
-		
+
 		self.poscode = np.zeros((image_size * 2, image_size * 2,2))
 		for i in range(image_size * 2):
 			self.poscode[i,:,0] = float(i) / image_size - 1.0
@@ -108,19 +109,19 @@ class Evaluator():
 
 		p = int(float(self.ptr) / len(self.pairs) * 60)
 		sys.stdout.write("\rprogress " + "|" * p + '.' * (60-p) + " %d/%d time %.2f" % (self.ptr, len(self.pairs), time() - self.t0))
-		sys.stdout.flush()	
+		sys.stdout.flush()
 
 		cc = 0
 		positions = []
 		for i in range(batchsize):
-			ptr = self.ptr + i 
+			ptr = self.ptr + i
 			if ptr >= len(self.pairs):
-				break 
+				break
 			cc += 1
 			nid1, nid2 = self.pairs[ptr]
-			pos1 = [self.links[1][nid1][0] + self.padding_size, self.links[1][nid1][1] + self.padding_size] 
-			pos2 = [self.links[1][nid2][0] + self.padding_size, self.links[1][nid2][1] + self.padding_size] 
-			
+			pos1 = [self.links[1][nid1][0] + self.padding_size, self.links[1][nid1][1] + self.padding_size]
+			pos2 = [self.links[1][nid2][0] + self.padding_size, self.links[1][nid2][1] + self.padding_size]
+
 			start = [(pos1[0] + pos2[0])//2 - self.image_size//2, (pos1[1] + pos2[1])//2 - self.image_size//2]
 
 			self.image_batch[i,:,:,:] = self.sat[start[1]:start[1] + self.image_size, start[0]:start[0] + self.image_size, :]
@@ -145,20 +146,20 @@ class Evaluator():
 			self.connector_batch[i,:,:,4:6] = self.poscode[self.image_size - y2:self.image_size*2 - y2, self.image_size - x2:self.image_size*2 - x2, :]
 			self.connector_batch[i,:,:,6] = -0.5
 
-		self.ptr += cc 
+		self.ptr += cc
 		#print(self.ptr)
-		st = 0			
+		st = 0
 		return cc, positions, self.image_batch[st:st+batchsize, :,:,:], self.connector_batch[st:st+batchsize,:,:,:], self.direction_batch[st:st+batchsize,:,:,:]
 
 	def checkResult(self, prediction):
 		prediction = [1 if x > 0.5 else 0 for x in prediction]
 
-		correct_n = 0 
-		union_n = 0 
-		#intersection_n = 0 
+		correct_n = 0
+		union_n = 0
+		#intersection_n = 0
 		correct_pos_n = 0
 		label_pos_n = 0
-		pred_pos_n = 0 
+		pred_pos_n = 0
 
 		for i in range(len(prediction)):
 			if prediction[i] == self.labels[i]:
@@ -174,7 +175,7 @@ class Evaluator():
 				pred_pos_n += 1
 			if self.labels[i] == 1:
 				label_pos_n += 1
-		
+
 		print(correct_n, correct_pos_n, union_n, label_pos_n, pred_pos_n)
 
 		print("Accuracy ", float(correct_n) / len(prediction))
@@ -202,8 +203,8 @@ class Evaluator():
 		#print("graph", graph)
 
 		if len(graph) == 0:
-			return False, None 
-		
+			return False, None
+
 		def distance(pos1, pos2):
 			a = pos1[0] - pos2[0]
 			b = pos1[1] - pos2[1]
@@ -212,25 +213,25 @@ class Evaluator():
 
 		p1dist = 100
 		p2dist = 100
-		p1nid = None  
-		p2nid = None 
+		p1nid = None
+		p2nid = None
 
 		for nid, nei in graph.items():
 			if len(nei) == 1:
 				d1 = distance(nid, p1)
 				if d1 < p1dist:
 					p1dist = d1
-					p1nid = nid 
-				
+					p1nid = nid
+
 				d2 = distance(nid, p2)
 				if d2 < p2dist:
 					p2dist = d2
-					p2nid = nid 
+					p2nid = nid
 
 		if p1nid is None or p2nid is None:
-			return False, None 
+			return False, None
 		if p1nid == p2nid:
-			return False, None 
+			return False, None
 
 		#print(p1nid, p2nid)
 
@@ -242,19 +243,19 @@ class Evaluator():
 			if newnid == p1nid:
 				newnid = p1
 			elif newnid == p2nid:
-				newnid = p2 
+				newnid = p2
 			newnei = []
 			for nn in nei:
-				new_nn = nn 
+				new_nn = nn
 				if new_nn == p1nid:
 					new_nn = p1
 				elif new_nn == p2nid:
 					new_nn = p2
 
 				newnei.append(new_nn)
-			newgraph[newnid] = newnei 
+			newgraph[newnid] = newnei
 
-		# find a path 
+		# find a path
 		link = []
 		cur = p1
 		failed = False
@@ -273,15 +274,15 @@ class Evaluator():
 				if len(nei) != 2:
 					failed = True
 					break
-				
+
 				if nei[0] == link[-2]:
 					cur = nei[1]
 				else:
 					cur = nei[0]
 
-		return not failed, link 	
-		
-		
+		return not failed, link
+
+
 
 if __name__ == "__main__":
 	evaluator = Evaluator(sys.argv[1], sys.argv[2])
@@ -290,12 +291,12 @@ if __name__ == "__main__":
 	inferEngine = InferEngine(batchsize=4)
 
 	result = []
-	
+
 	while True:
 		batch = evaluator.loadbatch(batchsize = 4)
 		if batch[0] == 0:
 			break
-		
+
 		ret = inferEngine.infer(sat = batch[2], connector = batch[3], direction = batch[4])
 		for i in range(batch[0]):
 			r = evaluator.seg2link(ret[i,:,:,0], batch[1][i][0], batch[1][i][1])
@@ -310,7 +311,7 @@ if __name__ == "__main__":
 
 			# cv2.circle(img, tuple(batch[1][i][0]), 5, color,-1)
 			# cv2.circle(img, tuple(batch[1][i][1]), 5, color,-1)
-			
+
 			if r[0] == True:
 				# link = r[1]
 				# for j in range(len(link)-1):
@@ -324,7 +325,7 @@ if __name__ == "__main__":
 				result.append(0)
 
 			# Image.fromarray(img).save("debug/pair%d_output_sat.png" % (len(result)-1))
-				
+
 			# if len(result) > 10:
 			# 	exit()
 	json.dump([evaluator.labels, result], open("results/v2_ret%s.json" % sys.argv[2], "w"), indent=2)

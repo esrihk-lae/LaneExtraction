@@ -1,5 +1,5 @@
-from subprocess import Popen 
-import sys 
+from subprocess import Popen
+import sys
 
 inputfile = sys.argv[1]
 outputfolder = sys.argv[2]
@@ -9,10 +9,10 @@ Popen("rm %s/*" % outputfolder, shell=True).wait()
 # run inference for the first stage and extract the graph
 Popen("cd lane_model_seg/; time python infer.py ../%s ../%s %s" % (inputfile, outputfolder, model), shell=True).wait()
 
-# turn segmentation to graph 
+# turn segmentation to graph
 Popen("python ../segtograph/segtograph.py %s/seg.png 64 %s/graph.p" % (outputfolder, outputfolder), shell=True).wait()
 
-# extract directions and create ways.json file 
+# extract directions and create ways.json file
 Popen("time python infer_direction.py %s %s %s" % (outputfolder + "/direction.png", outputfolder + "/graph.p", outputfolder), shell=True).wait()
 
 # extract turning lanes

@@ -1,5 +1,5 @@
-import math 
-import numpy as np 
+import math
+import numpy as np
 
 def distance(p1,p2):
 	a = p1[0]-p2[0]
@@ -13,7 +13,7 @@ def point2lineDistance(p, n1, n2):
 
 	v1 = [n1[0]-p[0], n1[1]-p[1]]
 	v2 = [n2[0]-p[0], n2[1]-p[1]]
-	
+
 	area = abs(v1[0]*v2[1]-v1[1]*v2[0])
 
 	return area/l
@@ -31,8 +31,8 @@ def douglasPeucker(node_list, e = 5):
 	for i in range(1, len(node_list)-1):
 		d = point2lineDistance(node_list[i], node_list[0], node_list[-1])
 		if d > best_d:
-			best_d = d 
-			best_i = i 
+			best_d = d
+			best_i = i
 
 	if best_d <= e:
 		return [node_list[0], node_list[-1]]
@@ -49,7 +49,7 @@ def graphInsert(node_neighbor, n1key, n2key):
 	if n1key != n2key:
 		if n1key in node_neighbor:
 			if n2key in node_neighbor[n1key]:
-				pass 
+				pass
 			else:
 				node_neighbor[n1key].append(n2key)
 		else:
@@ -58,7 +58,7 @@ def graphInsert(node_neighbor, n1key, n2key):
 
 		if n2key in node_neighbor:
 			if n1key in node_neighbor[n2key]:
-				pass 
+				pass
 			else:
 				node_neighbor[n2key].append(n1key)
 		else:
@@ -69,7 +69,7 @@ def graphInsert(node_neighbor, n1key, n2key):
 
 
 def simpilfyGraph(node_neighbor, e=2.5):
-	new_graph = {}	
+	new_graph = {}
 
 	visited = []
 
@@ -80,14 +80,14 @@ def simpilfyGraph(node_neighbor, e=2.5):
 			if node in visited:
 				continue
 
-			# search node_nei 
+			# search node_nei
 			for next_node in node_nei:
 				if next_node in visited:
 					continue
 
 				node_list = [node, next_node]
 
-				current_node = next_node 
+				current_node = next_node
 
 				while True:
 					if len(node_neighbor[node_list[-1]]) == 2:
@@ -112,7 +112,7 @@ def simpilfyGraph(node_neighbor, e=2.5):
 
 
 def colorGraph(node_neighbor, colormap):
-		
+
 	visited = []
 
 	edge_color = {}
@@ -122,14 +122,14 @@ def colorGraph(node_neighbor, colormap):
 			if node in visited:
 				continue
 
-			# search node_nei 
+			# search node_nei
 			for next_node in node_nei:
 				if next_node in visited:
 					continue
 
 				node_list = [node, next_node]
 
-				current_node = next_node 
+				current_node = next_node
 
 				while True:
 					if len(node_neighbor[node_list[-1]]) == 2:
@@ -144,7 +144,7 @@ def colorGraph(node_neighbor, colormap):
 					if node_list[i] not in visited:
 						visited.append(node_list[i])
 
-				# node_list 
+				# node_list
 				counter = np.zeros((3))
 				for i in range(len(node_list)-1):
 					x1,y1 = node_list[i]
@@ -155,7 +155,7 @@ def colorGraph(node_neighbor, colormap):
 					samples = []
 					for j in range(n):
 						a = float(j+1) / (n+1)
-					
+
 						x3 = int(x1 * a + x2 * (1-a))
 						y3 = int(y1 * a + y2 * (1-a))
 						samples.append((x3,y3))
@@ -170,7 +170,7 @@ def colorGraph(node_neighbor, colormap):
 							counter[0] += np.sum(colormap[x-3:x+4,y-3:y+4,0])
 							counter[1] += np.sum(colormap[x-3:x+4,y-3:y+4,1])
 							counter[2] += np.sum(colormap[x-3:x+4,y-3:y+4,2])
-				
+
 				color = np.argmax(counter)
 				s = counter[0] + counter[1] + counter[2] + 0.0001
 				counter = [float(v) / s for v in counter]
@@ -182,10 +182,9 @@ def colorGraph(node_neighbor, colormap):
 					edgekey1 = ((x1,y1), (x2,y2))
 					edgekey2 = ((x2,y2), (x1,y1))
 
-					edge_color[edgekey1] = list(counter) 
+					edge_color[edgekey1] = list(counter)
 					edge_color[edgekey2] = list(counter)
-					
+
 	return edge_color
 
 
-				

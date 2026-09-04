@@ -1,11 +1,11 @@
-# python3 
-import os 
-import sys 
+# python3
+import os
+import sys
 sys.path.append(os.path.dirname(sys.path[0]))
 
 from hdmapeditor.roadstructure import LaneMap
-import json 
-import pickle 
+import json
+import pickle
 
 ways = json.load(open(sys.argv[1]))
 links = json.load(open(sys.argv[2]))
@@ -46,4 +46,3 @@ for link in links:
 
 pickle.dump([laneMap, LaneMap()], open(sys.argv[3], "wb"))
 
-        

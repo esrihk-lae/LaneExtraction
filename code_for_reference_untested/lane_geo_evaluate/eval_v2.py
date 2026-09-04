@@ -1,15 +1,16 @@
-import sys 
-import json 
-import pickle 
-import numpy as np 
-import rtree 
-import cv2 
+import sys
+import json
+from time import time
+
+import pickle
+import numpy as np
+import rtree
+import cv2
 import scipy.ndimage
-from time import time 
 
 class Evaluator():
 	def __init__(self):
-		pass 
+		pass
 
 	def loadGTFromWays(self, name):
 		data = json.load(open(name, "r"))
@@ -34,7 +35,7 @@ class Evaluator():
 		self.prop_graph = pickle.load(open(name, 'r'))
 
 	# new data structure of graph
-	# including: 
+	# including:
 	#   neighbors the same as graph
 	#   node direction on interpolated graph
 	# need to add new graph loading function
@@ -59,9 +60,9 @@ class Evaluator():
 				except:
 					pass
 		else:
-			linkdata = None 
+			linkdata = None
 
-		
+
 		if linkdata is not None:
 			waydata = waydata + linkdata
 
@@ -77,7 +78,7 @@ class Evaluator():
 				for i in range(1,len(way)-1):
 					way[i][0] += (np.random.random() - 0.5) * 0.001
 					way[i][1] += (np.random.random() - 0.5) * 0.001
-					
+
 			for i in range(len(way)-1):
 				x1,y1 = way[i][1], way[i][0]
 				x2,y2 = way[i+1][1], way[i+1][0]
@@ -89,18 +90,18 @@ class Evaluator():
 					a = 1.0 - float(j) / (L-1)
 					x = x1*a + x2*(1-a)
 					y = y1*a + y2*(1-a)
-					
+
 					nk1 = last_node
 					nk2 = (x, y)
-					
+
 					if x < 0 or x >= 4096 or y < 0 or y >= 4096:
 						last_node = (x, y)
 						continue
-					
+
 					if last_node[0] < 0 or last_node[0] >= 4096 or last_node[1] < 0 or last_node[1] >= 4096:
 						last_node = (x, y)
 						continue
-					
+
 					if nk1 not in neighbors:
 						neighbors[nk1] = [nk2]
 					elif nk2 not in neighbors[nk1]:
@@ -115,8 +116,8 @@ class Evaluator():
 
 					last_node = (x,y)
 
-			
-		
+
+
 		for nid, nei in neighbors.items():
 			if len(nei) <= 2:
 				vx,vy = 0,0
@@ -128,10 +129,10 @@ class Evaluator():
 						vx -= nn[0] - nid[0]
 						vy -= nn[1] - nid[1]
 
-				
+
 				l = np.sqrt(vx**2 + vy**2)
-				vx = vx / l 
-				vy = vy / l 
+				vx = vx / l
+				vy = vy / l
 
 				node_directions[nid] = (vx, vy)
 
@@ -151,15 +152,15 @@ class Evaluator():
 		cv2.imwrite(filename, img)
 
 
-	# def getNodesFromGraph(self, graph): # place nodes every 0.25 meter 
+	# def getNodesFromGraph(self, graph): # place nodes every 0.25 meter
 	# 	nodes = set()
 	# 	exist = set()
 	# 	for nid, nei in graph.items():
 	# 		for nn in nei:
 	# 			if (nid, nn) in exist or (nn, nid) in exist:
 	# 				continue
-	# 			x1,y1 = nid 
-	# 			x2,y2 = nn 
+	# 			x1,y1 = nid
+	# 			x2,y2 = nn
 
 	# 			exist.add((nid, nn))
 
@@ -178,7 +179,7 @@ class Evaluator():
 
 	# 	return list(nodes)
 
-	
+
 	def propagate(self, graph, nid, steps = 200):
 		visited = set()
 		queue = [(nid,0)]
@@ -187,13 +188,13 @@ class Evaluator():
 			visited.add(cur_nid)
 
 			if depth >= steps:
-				continue 
-			
+				continue
+
 			#print(cur_nid, len(graph[cur_nid]))
 
 			for nei in graph[cur_nid]:
 				if nei in visited:
-					continue 
+					continue
 
 				queue.append((nei, depth + 1))
 
@@ -208,21 +209,21 @@ class Evaluator():
 			b = (p1[1] - p2[1])**2
 			return np.sqrt(a + b)
 
-			
+
 		while len(queue) > 0:
 			cur_nid, depth = queue.pop()
 			visited.add(cur_nid)
 
 			if depth >= steps:
-				continue 
-			
+				continue
+
 			#print(cur_nid, len(graph[cur_nid]))
 
 			for nei in graph[cur_nid]:
 				if nei in visited:
-					continue 
+					continue
 
-				
+
 				queue.append((nei, depth + distance(cur_nid, nei)))
 
 		return list(visited)
@@ -251,10 +252,10 @@ class Evaluator():
 
 		pairs = sorted(pairs, key=lambda x: x[2])
 
-		matched = 0 
+		matched = 0
 		prop_set = set()
 		gt_set = set()
-		
+
 		for pair in pairs:
 			n1, n2, _ = pair
 			if n1 in prop_set or n2 in gt_set:
@@ -263,7 +264,7 @@ class Evaluator():
 			prop_set.add(n1)
 			gt_set.add(n2)
 			matched += 1
-		
+
 		precision = float(matched) / len(nodes1)
 		recall = float(matched) / len(nodes2)
 
@@ -298,7 +299,7 @@ class Evaluator():
 		pairs = []
 
 		m = thr
-		
+
 		for i in range(len(prop_nodes)):
 			x,y = prop_nodes[i]
 			dir_1 = prop_directions[(x,y)]
@@ -325,7 +326,7 @@ class Evaluator():
 
 		pairs = sorted(pairs, key=lambda x: x[2])
 
-		matched = 0 
+		matched = 0
 		prop_set = set()
 		gt_set = set()
 		ps, rs = [], []
@@ -356,14 +357,14 @@ class Evaluator():
 					img_debug = np.zeros((4096, 4096, 3), dtype=np.uint8)
 					for i in range(len(nodes1)):
 						cv2.circle(img_debug, (int(nodes1[i][0]), int(nodes1[i][1])), 3, (255,0,0),1)
-					
+
 					for i in range(len(nodes2)):
 						cv2.circle(img_debug, (int(nodes2[i][0]), int(nodes2[i][1])), 1, (0,0,255),-1)
 
 					cv2.circle(img_debug, (int(prop_nodes[n1][0]),int(prop_nodes[n1][1])), 5, (0,255,0),1)
 					cv2.circle(img_debug, (int(gt_nodes[n2][0]),int(gt_nodes[n2][1])), 2, (0,255,0),-1)
 
-					cv2.imwrite("debug.png", img_debug)	
+					cv2.imwrite("debug.png", img_debug)
 				#exit()
 
 
@@ -374,8 +375,8 @@ class Evaluator():
 
 			if matched % 10 == 0:
 				sys.stdout.write("\rmatched %d precision:%.3f recall:%.3f %.3f "% (matched, np.mean(ps), np.mean(rs), t1-t0) )
-				sys.stdout.flush()	
-		
+				sys.stdout.flush()
+
 		print("matched", matched)
 
 		print("geo precision", float(matched) / len(prop_nodes))
@@ -383,7 +384,7 @@ class Evaluator():
 
 		print("topo precision", float(matched) / len(prop_nodes) * np.mean(ps))
 		print("topo recall", float(matched) / len(gt_nodes) * np.mean(rs))
-		
+
 
 		return float(matched) / len(prop_nodes), float(matched) / len(gt_nodes), np.mean(ps), np.mean(rs)
 
@@ -434,5 +435,5 @@ if __name__ == "__main__":
 
 	# e.loadGTFromWays(sys.argv[1])
 	# e.loadPropFromGraph(sys.argv[2])
-	# e.topoMetric(mask = sys.argv[3])   
-	# python eval.py ../dataset_evaluation/way_5.json ../all_results/5/graph.p ../dataset_evaluation/regionmask_5.jpg 
+	# e.topoMetric(mask = sys.argv[3])
+	# python eval.py ../dataset_evaluation/way_5.json ../all_results/5/graph.p ../dataset_evaluation/regionmask_5.jpg

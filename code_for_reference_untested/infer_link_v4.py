@@ -1,15 +1,15 @@
-import os 
-import sys 
+import os
+import sys
 sys.path.append(os.path.dirname(sys.path[0]))
 
-import sys 
+import sys
 
 from model_link import LinkModel
 
-from PIL import Image 
-import numpy as np 
-from subprocess import Popen 
-import tensorflow as tf 
+from PIL import Image
+import numpy as np
+from subprocess import Popen
+import tensorflow as tf
 import math
 import scipy.ndimage
 import pickle
@@ -18,7 +18,7 @@ import json
 from segtograph.segtographfunc import segtograph
 from link_model_v4.infer import InferEngine
 from link_model_v0.infer import InferEngine as InferEngineSeg
-from time import time 
+from time import time
 
 def seg2link(seg, p1, p2):
 	p1 = (p1[1], p1[0])
@@ -28,8 +28,8 @@ def seg2link(seg, p1, p2):
 	#print("graph", graph)
 
 	if len(graph) == 0:
-		return False, None 
-	
+		return False, None
+
 	def distance(pos1, pos2):
 		a = pos1[0] - pos2[0]
 		b = pos1[1] - pos2[1]
@@ -38,25 +38,25 @@ def seg2link(seg, p1, p2):
 
 	p1dist = 100
 	p2dist = 100
-	p1nid = None  
-	p2nid = None 
+	p1nid = None
+	p2nid = None
 
 	for nid, nei in graph.items():
 		if len(nei) == 1:
 			d1 = distance(nid, p1)
 			if d1 < p1dist:
 				p1dist = d1
-				p1nid = nid 
-			
+				p1nid = nid
+
 			d2 = distance(nid, p2)
 			if d2 < p2dist:
 				p2dist = d2
-				p2nid = nid 
+				p2nid = nid
 
 	if p1nid is None or p2nid is None:
-		return False, None 
+		return False, None
 	if p1nid == p2nid:
-		return False, None 
+		return False, None
 
 	#print(p1nid, p2nid)
 
@@ -68,19 +68,19 @@ def seg2link(seg, p1, p2):
 		if newnid == p1nid:
 			newnid = p1
 		elif newnid == p2nid:
-			newnid = p2 
+			newnid = p2
 		newnei = []
 		for nn in nei:
-			new_nn = nn 
+			new_nn = nn
 			if new_nn == p1nid:
 				new_nn = p1
 			elif new_nn == p2nid:
 				new_nn = p2
 
 			newnei.append(new_nn)
-		newgraph[newnid] = newnei 
+		newgraph[newnid] = newnei
 
-	# find a path 
+	# find a path
 	link = []
 	cur = p1
 	failed = False
@@ -99,20 +99,20 @@ def seg2link(seg, p1, p2):
 			if len(nei) != 2:
 				failed = True
 				break
-			
+
 			if nei[0] == link[-2]:
 				cur = nei[1]
 			else:
 				cur = nei[0]
 
 	if failed == False:
-		return True, link 
+		return True, link
 
-	# need intepolation 
+	# need intepolation
 
 	link2 = []
 	cur = p2
-	
+
 	while True:
 		link2.append(cur)
 		if cur == p1:
@@ -125,16 +125,16 @@ def seg2link(seg, p1, p2):
 		else:
 			if len(nei) != 2:
 				break
-			
+
 			if nei[0] == link2[-2]:
 				cur = nei[1]
 			else:
 				cur = nei[0]
-	
+
 	for i in range(len(link2)):
 		link.append(link2[len(link2) -1 - i])
 
-	return True, link 	
+	return True, link
 
 
 
@@ -187,7 +187,7 @@ for way in ways:
 	starting_nodes.add(tuple(way[0]))
 	ending_nodes.add(tuple(way[-1]))
 
-	
+
 r = 70*8
 pairs = []
 
@@ -209,14 +209,14 @@ print("found %d pairs" % len(pairs))
 batchsize = 8
 
 
-	
+
 model = InferEngine(batchsize=batchsize)
 image_size = cnninput
 
 image_batch = np.zeros((batchsize, image_size, image_size,3))
 direction_batch = np.zeros((batchsize, image_size, image_size,2))
 connector_batch = np.zeros((batchsize, image_size, image_size,7))
-	
+
 img = np.zeros((image_size, image_size), dtype=np.uint8)
 
 poscode = np.zeros((image_size * 2, image_size * 2,2))
@@ -233,7 +233,7 @@ counter = 0
 for i in range(0,len(pairs), batchsize):
 	p = int(float(i) / len(pairs) * 60)
 	sys.stdout.write("\rprogress " + "|" * p + '.' * (60-p) + " %d/%d time %.2f good link %d" % (i, len(pairs), time() - t0, counter))
-	sys.stdout.flush()	
+	sys.stdout.flush()
 
 	for j in range(batchsize):
 		if i + j < len(pairs):
@@ -245,7 +245,7 @@ for i in range(0,len(pairs), batchsize):
 
 			image_batch[j,:,:,:] = inputsat[start[1]:start[1] + image_size, start[0]:start[0] + image_size, :]
 			direction_batch[j,:,:,:] = context[start[1]:start[1] + image_size, start[0]:start[0] + image_size, :]
-		
+
 			img *= 0
 			cv2.circle(img, (pos1[0] - start[0], pos1[1] - start[1]), 12, (255), -1)
 			connector_batch[j,:,:,0] = np.copy(img) / 255.0 - 0.5
@@ -268,18 +268,18 @@ for i in range(0,len(pairs), batchsize):
 
 
 
-	
+
 	ret =  model.infer(sat = image_batch, connector= connector_batch, direction=direction_batch)
 	for j in range(batchsize):
 		if i + j < len(pairs):
 			results.append(ret[0][j,0])
 			if ret[0][j,0] > 0.5:
 				counter += 1
-			# 
+			#
 			Image.fromarray(((image_batch[j,:,:,:] + 0.5) * 255).astype(np.uint8)).save(outputfolder_details + "/aerial%d.png" % (i+j))
 			Image.fromarray(((connector_batch[j,:,:,0:3]) * 127 + 127).astype(np.uint8) ).save(outputfolder_details + "/connectorA%d.png" % (i+j))
 			Image.fromarray(((connector_batch[j,:,:,3:6]) * 127 + 127).astype(np.uint8) ).save(outputfolder_details + "/connectorB%d.png" % (i+j))
-			
+
 			direction_img = np.zeros((640, 640, 3))
 
 			direction_img[:,:,2] = np.clip(direction_batch[j,:,:,0],-1,1) * 127 + 127
@@ -289,10 +289,10 @@ for i in range(0,len(pairs), batchsize):
 			# direction_img[:,:,0] += batch[1][i,:,:,0] * 255 + 127
 			# direction_img[:,:,1] += batch[1][i,:,:,3] * 255 + 127
 			# direction_img[:,:,2] += batch[1][i,:,:,6] * 255 + 127
-			
+
 			direction_img = np.clip(direction_img, 0, 255)
 			Image.fromarray(direction_img.astype(np.uint8) ).save(outputfolder_details + "/direction%d.png" % (i+j))
-			
+
 			Image.fromarray((ret[1][j,:,:,0] * 255).astype(np.uint8)).save(outputfolder_details + "/outputA%d.png" % (i+j))
 			Image.fromarray((ret[1][j,:,:,1] * 255).astype(np.uint8)).save(outputfolder_details + "/outputB%d.png" % (i+j))
 
@@ -300,11 +300,11 @@ for i in range(0,len(pairs), batchsize):
 
 
 
-	
+
 print("Found %d links" % counter)
 
 tf.reset_default_graph()
-model.sess.close()	
+model.sess.close()
 
 
 model = InferEngineSeg(batchsize = 1)
@@ -320,7 +320,7 @@ for i in range(len(pairs)):
 
 		image_batch[0,:,:,:] = inputsat[start[1]:start[1] + image_size, start[0]:start[0] + image_size, :]
 		direction_batch[0,:,:,:] = context[start[1]:start[1] + image_size, start[0]:start[0] + image_size, :]
-	
+
 		img *= 0
 		cv2.circle(img, (pos1[0] - start[0], pos1[1] - start[1]), 12, (255), -1)
 		connector_batch[0,:,:,0] = np.copy(img) / 255.0 - 0.5
@@ -340,7 +340,7 @@ for i in range(len(pairs)):
 		connector_batch[0,:,:,1:3] = poscode[image_size - y1:image_size*2 - y1, image_size - x1:image_size*2 - x1, :]
 		connector_batch[0,:,:,4:6] = poscode[image_size - y2:image_size*2 - y2, image_size - x2:image_size*2 - x2, :]
 		connector_batch[0,:,:,6] = -0.5
-	
+
 		seg = model.infer(sat=image_batch[0:1,:,:,:], connector = connector_batch[0:1,:,:,:], direction=direction_batch[0:1,:,:,:])
 
 		Image.fromarray((seg[0,:,:,0]*255).astype(np.uint8))
@@ -354,22 +354,22 @@ for i in range(len(pairs)):
 			failed += 1
 
 		if ok:
-			
+
 			for pos in link:
 				newpos = (int(pos[0] + start[1] - margin), int(pos[1] + start[0] - margin))
 				newlink.append(newpos)
-			
+
 			links.append(newlink)
 
-		
+
 		Image.fromarray((seg[0,:,:,0]*255).astype(np.uint8)).save(outputfolder_details+"/seg%d.png" % i)
 		json.dump([ok, newlink], open(outputfolder_details+"/link%d.json" % (i),"w"))
-			
+
 
 print(len(links), failed)
 json.dump(links, open(outputfolder + "/links.json", "w"), indent=2)
 
-			
+
 
 
 
